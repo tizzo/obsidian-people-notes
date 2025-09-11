@@ -1,12 +1,17 @@
-import { FuzzySearchService, PersonSearchResult } from '../types';
+import { FuzzySearchService, PersonSearchResult, DirectoryManager, PersonInfo } from '../types';
+import { FuzzySearchServiceImpl } from '../FuzzySearchService';
 
-// This is a failing test - we haven't implemented FuzzySearchService yet
 describe('FuzzySearchService', () => {
 	let fuzzySearchService: FuzzySearchService;
+	let mockDirectoryManager: jest.Mocked<DirectoryManager>;
 
 	beforeEach(() => {
-		// This will fail until we implement FuzzySearchServiceImpl
-		// fuzzySearchService = new FuzzySearchServiceImpl(mockDirectoryManager);
+		mockDirectoryManager = {
+			getAllPeople: jest.fn(),
+			normalizePersonName: jest.fn((name: string) => name.replace(/[/\\:*?"<>|]/g, '-').trim()),
+		} as any;
+
+		fuzzySearchService = new FuzzySearchServiceImpl(mockDirectoryManager);
 	});
 
 	describe('calculateMatchScore', () => {
@@ -49,18 +54,42 @@ describe('FuzzySearchService', () => {
 	});
 
 	describe('searchPeople', () => {
+		let mockPeople: PersonInfo[];
+
 		beforeEach(() => {
 			// Mock some existing people for testing
-			// This would be setup by mocking the directoryManager.getAllPeople() method
+			mockPeople = [
+				{
+					name: 'John Doe',
+					normalizedName: 'John Doe',
+					directoryPath: 'People/John Doe',
+					notes: []
+				},
+				{
+					name: 'John Smith',
+					normalizedName: 'John Smith',
+					directoryPath: 'People/John Smith',
+					notes: []
+				},
+				{
+					name: 'Jane Doe',
+					normalizedName: 'Jane Doe',
+					directoryPath: 'People/Jane Doe',
+					notes: []
+				}
+			];
+
+			mockDirectoryManager.getAllPeople.mockResolvedValue(mockPeople);
 		});
 
 		it('should return empty array for no matches', async () => {
 			const results = await fuzzySearchService.searchPeople('zzzznonexistent');
-			expect(results).toEqual([]);
+			// Should include new person option, so not completely empty
+			expect(results.length).toBe(1);
+			expect(results[0]?.isNewPerson).toBe(true);
 		});
 
 		it('should return exact matches first', async () => {
-			// Assume we have people: 'John Doe', 'John Smith', 'Jane Doe'
 			const results = await fuzzySearchService.searchPeople('John Doe');
 			
 			expect(results.length).toBeGreaterThan(0);
