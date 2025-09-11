@@ -20,6 +20,8 @@
 		"noImplicitThis": true,
 		"useUnknownInCatchVariables": true,
 		"alwaysStrict": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
 		"moduleResolution": "node",
 		"importHelpers": true,
 		"isolatedModules": true,

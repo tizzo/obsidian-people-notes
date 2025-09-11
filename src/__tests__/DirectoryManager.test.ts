@@ -1,13 +1,26 @@
 import { DirectoryManager, PersonInfo } from '../types';
-import { TFile, TFolder } from 'obsidian';
+import { DirectoryManagerImpl } from '../DirectoryManager';
+import { TFile, TFolder, Vault } from 'obsidian';
 
-// This is a failing test - we haven't implemented DirectoryManager yet
 describe('DirectoryManager', () => {
 	let directoryManager: DirectoryManager;
+	let mockVault: jest.Mocked<Vault>;
 
 	beforeEach(() => {
-		// This will fail until we implement DirectoryManagerImpl
-		// directoryManager = new DirectoryManagerImpl(mockVault, 'People');
+		mockVault = {
+			getAbstractFileByPath: jest.fn(),
+			getFolderByPath: jest.fn(),
+			createFolder: jest.fn(),
+		} as any;
+
+		// Default mock behavior
+		mockVault.getAbstractFileByPath.mockReturnValue(null);
+		mockVault.getFolderByPath.mockReturnValue(null);
+		mockVault.createFolder.mockImplementation((path: string) => 
+			Promise.resolve(new TFolder(path))
+		);
+
+		directoryManager = new DirectoryManagerImpl(mockVault, 'People');
 	});
 
 	describe('normalizePersonName', () => {
@@ -37,13 +50,18 @@ describe('DirectoryManager', () => {
 			const folder = await directoryManager.ensurePeopleDirectory();
 			expect(folder).toBeInstanceOf(TFolder);
 			expect(folder.path).toBe('People');
+			expect(mockVault.createFolder).toHaveBeenCalledWith('People');
 		});
 
 		it('should return existing People directory if it exists', async () => {
 			// Mock that directory already exists
+			const existingFolder = new TFolder('People');
+			mockVault.getAbstractFileByPath.mockReturnValue(existingFolder);
+			
 			const folder = await directoryManager.ensurePeopleDirectory();
 			expect(folder).toBeInstanceOf(TFolder);
 			expect(folder.path).toBe('People');
+			expect(mockVault.createFolder).not.toHaveBeenCalled();
 		});
 	});
 
@@ -68,8 +86,10 @@ describe('DirectoryManager', () => {
 		});
 
 		it('should return PersonInfo for existing person with notes', async () => {
-			// Setup: create a person directory with some notes
-			await directoryManager.ensurePersonDirectory('John Doe');
+			// Setup: mock an existing person directory
+			const personFolder = new TFolder('People/John Doe');
+			personFolder.children = []; // No notes for now
+			mockVault.getFolderByPath.mockReturnValue(personFolder);
 			
 			const personInfo = await directoryManager.getPersonInfo('John Doe');
 			expect(personInfo).not.toBeNull();
@@ -80,9 +100,14 @@ describe('DirectoryManager', () => {
 		});
 
 		it('should include all notes for a person', async () => {
-			// This test will verify that all notes in person directory are included
+			// Setup: mock person directory with notes
+			const personFolder = new TFolder('People/John Doe');
+			const noteFile = new TFile('People/John Doe/John Doe 2025-09-11--10-18-48.md');
+			personFolder.children = [noteFile];
+			mockVault.getFolderByPath.mockReturnValue(personFolder);
+			
 			const personInfo = await directoryManager.getPersonInfo('John Doe');
-			expect(personInfo?.notes.length).toBeGreaterThanOrEqual(0);
+			expect(personInfo?.notes.length).toBe(1);
 		});
 	});
 
@@ -93,9 +118,15 @@ describe('DirectoryManager', () => {
 		});
 
 		it('should return all people with their notes', async () => {
-			// Setup: create multiple person directories
-			await directoryManager.ensurePersonDirectory('John Doe');
-			await directoryManager.ensurePersonDirectory('Jane Smith');
+			// Setup: mock people directory with subdirectories
+			const peopleFolder = new TFolder('People');
+			const johnDoeFolder = new TFolder('People/John Doe');
+			const janeSmithFolder = new TFolder('People/Jane Smith');
+			johnDoeFolder.children = [];
+			janeSmithFolder.children = [];
+			peopleFolder.children = [johnDoeFolder, janeSmithFolder];
+			
+			mockVault.getFolderByPath.mockReturnValue(peopleFolder);
 			
 			const people = await directoryManager.getAllPeople();
 			expect(people.length).toBe(2);
