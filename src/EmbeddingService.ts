@@ -166,13 +166,28 @@ This file automatically tracks all notes created for different people.
 		
 		// Extract timestamp from note filename if possible
 		const timestampMatch = existingNoteEntry.match(/(\d{4}-\d{2}-\d{2}--\d{2}-\d{2}-\d{2})/);
-		if (timestampMatch) {
-			const [datePart, timePart] = timestampMatch[1].split('--');
-			const [year, month, day] = datePart.split('-').map(Number);
-			const [hour, minute, second] = timePart.split('-').map(Number);
-			const existingTimestamp = new Date(year, month - 1, day, hour, minute, second).getTime();
-			
-			return newTimestamp > existingTimestamp; // Newer notes first
+		if (timestampMatch && timestampMatch[1]) {
+			const parts = timestampMatch[1].split('--');
+			if (parts.length === 2) {
+				const [datePart, timePart] = parts;
+				const dateComponents = datePart?.split('-').map(Number);
+				const timeComponents = timePart?.split('-').map(Number);
+				
+				if (dateComponents && dateComponents.length === 3 && timeComponents && timeComponents.length === 3) {
+					const [year, month, day] = dateComponents;
+					const [hour, minute, second] = timeComponents;
+					const existingTimestamp = new Date(
+						year ?? 0, 
+						(month ?? 1) - 1, 
+						day ?? 1, 
+						hour ?? 0, 
+						minute ?? 0, 
+						second ?? 0
+					).getTime();
+					
+					return newTimestamp > existingTimestamp; // Newer notes first
+				}
+			}
 		}
 
 		// If can't parse timestamp, insert at beginning (assuming it's newer)

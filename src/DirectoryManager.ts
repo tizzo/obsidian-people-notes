@@ -119,6 +119,16 @@ export class DirectoryManagerImpl implements DirectoryManager {
 		}
 		
 		const timestampStr = match[1];
+		if (!timestampStr) {
+			return {
+				personName,
+				fileName: file.name,
+				filePath: file.path,
+				timestamp: new Date(file.stat.mtime),
+				file
+			};
+		}
+		
 		const timestamp = this.parseTimestamp(timestampStr);
 		
 		return {
@@ -132,10 +142,29 @@ export class DirectoryManagerImpl implements DirectoryManager {
 
 	private parseTimestamp(timestampStr: string): Date {
 		// Parse format: YYYY-MM-DD--HH-mm-ss
-		const [datePart, timePart] = timestampStr.split('--');
-		const [year, month, day] = datePart.split('-').map(Number);
-		const [hour, minute, second] = timePart.split('-').map(Number);
+		const parts = timestampStr.split('--');
+		if (parts.length !== 2) {
+			return new Date(); // Fallback to current time
+		}
 		
-		return new Date(year, month - 1, day, hour, minute, second);
+		const [datePart, timePart] = parts;
+		const dateComponents = datePart?.split('-').map(Number);
+		const timeComponents = timePart?.split('-').map(Number);
+		
+		if (!dateComponents || dateComponents.length !== 3 || !timeComponents || timeComponents.length !== 3) {
+			return new Date(); // Fallback to current time
+		}
+		
+		const [year, month, day] = dateComponents;
+		const [hour, minute, second] = timeComponents;
+		
+		return new Date(
+			year ?? 0, 
+			(month ?? 1) - 1, 
+			day ?? 1, 
+			hour ?? 0, 
+			minute ?? 0, 
+			second ?? 0
+		);
 	}
 }

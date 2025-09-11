@@ -25,10 +25,10 @@ export interface NoteInfo {
  * Configuration settings for the People Notes plugin
  */
 export interface PeopleNotesSettings {
-	readonly peopleDirectoryPath: string;
-	readonly tableOfContentsPath: string;
-	readonly embeddingFormat: EmbeddingFormat;
-	readonly timestampFormat: TimestampFormat;
+	peopleDirectoryPath: string;
+	tableOfContentsPath: string;
+	embeddingFormat: EmbeddingFormat;
+	timestampFormat: TimestampFormat;
 }
 
 /**
