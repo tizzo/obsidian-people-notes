@@ -1,13 +1,31 @@
 import { EmbeddingService, NoteInfo, EmbeddingFormat, DEFAULT_SETTINGS } from '../types';
+import { EmbeddingServiceImpl } from '../EmbeddingService';
+import { Vault, Workspace, TFile } from 'obsidian';
 
-// This is a failing test - we haven't implemented EmbeddingService yet
 describe('EmbeddingService', () => {
 	let embeddingService: EmbeddingService;
+	let mockVault: jest.Mocked<Vault>;
+	let mockWorkspace: jest.Mocked<Workspace>;
 	let mockNote: NoteInfo;
 
 	beforeEach(() => {
-		// This will fail until we implement EmbeddingServiceImpl
-		// embeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, DEFAULT_SETTINGS);
+		mockVault = {
+			getAbstractFileByPath: jest.fn(),
+			create: jest.fn(),
+			read: jest.fn(),
+			modify: jest.fn(),
+		} as any;
+
+		mockWorkspace = {
+			getActiveFile: jest.fn(),
+		} as any;
+
+		// Default mock implementations
+		mockVault.read.mockResolvedValue('');
+		mockVault.modify.mockResolvedValue();
+		mockVault.create.mockResolvedValue(new TFile('test.md'));
+
+		embeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, DEFAULT_SETTINGS);
 		
 		mockNote = {
 			personName: 'John Doe',
@@ -59,24 +77,40 @@ describe('EmbeddingService', () => {
 	describe('embedInCurrentNote', () => {
 		it('should embed note in current active note successfully', async () => {
 			// Mock an active note
+			const activeFile = new TFile('current-note.md');
+			mockWorkspace.getActiveFile.mockReturnValue(activeFile);
+			mockVault.read.mockResolvedValue('Existing content');
+
 			const result = await embeddingService.embedInCurrentNote(mockNote);
 			expect(result).toBe(true);
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				activeFile, 
+				'Existing content\n\n[[John Doe 2025-09-11--10-18-48]]'
+			);
 		});
 
 		it('should return false when no active note exists', async () => {
 			// Mock no active note scenario
+			mockWorkspace.getActiveFile.mockReturnValue(null);
+			
 			const result = await embeddingService.embedInCurrentNote(mockNote);
 			expect(result).toBe(false);
+			expect(mockVault.modify).not.toHaveBeenCalled();
 		});
 
 		it('should append note link to end of current note', async () => {
-			// This would be verified by checking the mock vault's modify method was called
-			// with the current note's content plus the new link
+			// Mock an active note with existing content
+			const activeFile = new TFile('current-note.md');
+			mockWorkspace.getActiveFile.mockReturnValue(activeFile);
+			mockVault.read.mockResolvedValue('Original content here');
+
 			const result = await embeddingService.embedInCurrentNote(mockNote);
 			expect(result).toBe(true);
 			
-			// Would verify that vault.modify was called with:
-			// originalContent + '\n\n' + formattedLink
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				activeFile, 
+				'Original content here\n\n[[John Doe 2025-09-11--10-18-48]]'
+			);
 		});
 
 		it('should handle embedding errors gracefully', async () => {
@@ -86,9 +120,19 @@ describe('EmbeddingService', () => {
 		});
 
 		it('should use configured embedding format', async () => {
-			// Test would verify the correct format is used based on settings
+			// Mock an active note
+			const activeFile = new TFile('current-note.md');
+			mockWorkspace.getActiveFile.mockReturnValue(activeFile);
+			mockVault.read.mockResolvedValue('Content');
+
 			const result = await embeddingService.embedInCurrentNote(mockNote);
 			expect(result).toBe(true);
+			
+			// Should use wikilink format from DEFAULT_SETTINGS
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				activeFile, 
+				'Content\n\n[[John Doe 2025-09-11--10-18-48]]'
+			);
 		});
 	});
 
@@ -128,6 +172,10 @@ describe('EmbeddingService', () => {
 
 		it('should handle TOC update errors gracefully', async () => {
 			// Mock file system error
+			mockVault.getAbstractFileByPath.mockImplementation(() => {
+				throw new Error('File system error');
+			});
+
 			const result = await embeddingService.updateTableOfContents(mockNote);
 			expect(result).toBe(false);
 		});
