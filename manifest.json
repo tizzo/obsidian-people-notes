@@ -1,0 +1,10 @@
+{
+	"id": "people-notes",
+	"name": "People Notes",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Create timestamped notes for people in organized directories with automatic embedding in current note and table of contents.",
+	"author": "Your Name",
+	"authorUrl": "https://github.com/yourusername",
+	"isDesktopOnly": false
+}
