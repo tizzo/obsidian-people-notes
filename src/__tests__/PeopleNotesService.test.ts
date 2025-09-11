@@ -1,12 +1,40 @@
-import { PeopleNotesService, CreateNoteOptions, CreateNoteResult, DEFAULT_SETTINGS } from '../types';
+import { PeopleNotesService, CreateNoteOptions, CreateNoteResult, DEFAULT_SETTINGS, DirectoryManager, EmbeddingService } from '../types';
+import { PeopleNotesServiceImpl } from '../PeopleNotesService';
+import { Vault, TFile } from 'obsidian';
 
-// This is a failing test - we haven't implemented PeopleNotesService yet
 describe('PeopleNotesService', () => {
 	let peopleNotesService: PeopleNotesService;
+	let mockVault: jest.Mocked<Vault>;
+	let mockDirectoryManager: jest.Mocked<DirectoryManager>;
+	let mockEmbeddingService: jest.Mocked<EmbeddingService>;
 
 	beforeEach(() => {
-		// This will fail until we implement PeopleNotesServiceImpl
-		// peopleNotesService = new PeopleNotesServiceImpl(mockVault, mockDirectoryManager, DEFAULT_SETTINGS);
+		mockVault = {
+			create: jest.fn(),
+		} as any;
+
+		mockDirectoryManager = {
+			normalizePersonName: jest.fn((name: string) => name.replace(/[/\\:*?"<>|]/g, '-').trim()),
+			ensurePersonDirectory: jest.fn(),
+		} as any;
+
+		mockEmbeddingService = {
+			embedInCurrentNote: jest.fn(),
+			updateTableOfContents: jest.fn(),
+		} as any;
+
+		// Default mock implementations
+		mockVault.create.mockResolvedValue(new TFile('test-path.md'));
+		mockDirectoryManager.ensurePersonDirectory.mockResolvedValue({} as any);
+		mockEmbeddingService.embedInCurrentNote.mockResolvedValue(true);
+		mockEmbeddingService.updateTableOfContents.mockResolvedValue(true);
+
+		peopleNotesService = new PeopleNotesServiceImpl(
+			mockVault,
+			mockDirectoryManager,
+			mockEmbeddingService,
+			DEFAULT_SETTINGS
+		);
 	});
 
 	describe('generateFileName', () => {
