@@ -16,7 +16,8 @@
       "Bash(rg:*)",
       "Bash(find:*)",
       "Bash(npx jest:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(git filter-branch:*)"
     ],
     "deny": []
   }
