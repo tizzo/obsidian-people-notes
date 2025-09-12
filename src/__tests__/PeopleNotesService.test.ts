@@ -153,5 +153,20 @@ describe('PeopleNotesService', () => {
 			expect(result.success).toBe(true);
 			// Directory should be created automatically
 		});
+
+		it('should generate note content with correct template format', async () => {
+			const options: CreateNoteOptions = {
+				personName: 'John Doe',
+				timestamp: new Date('2025-09-11T10:18:48')
+			};
+
+			await peopleNotesService.createNote(options);
+
+			// Check that vault.create was called with the correct content format
+			expect(mockVault.create).toHaveBeenCalledWith(
+				expect.any(String),
+				expect.stringContaining('*Created: 9/11/2025 at 10:18:48 AM*\n\n- ')
+			);
+		});
 	});
 });

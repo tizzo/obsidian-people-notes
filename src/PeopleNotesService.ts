@@ -99,12 +99,8 @@ export class PeopleNotesServiceImpl implements PeopleNotesService {
 		const formattedDate = timestamp.toLocaleDateString();
 		const formattedTime = timestamp.toLocaleTimeString();
 
-		return `# ${personName} - ${formattedDate}
+		return `*Created: ${formattedDate} at ${formattedTime}*
 
-*Created: ${formattedDate} at ${formattedTime}*
-
-## Notes
-
-`;
+- `;
 	}
 }

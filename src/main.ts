@@ -150,7 +150,23 @@ export default class PeopleNotesPlugin extends Plugin {
 			if (result.success && result.note) {
 				// Open the newly created note
 				if (result.note.file) {
-					await this.app.workspace.getLeaf().openFile(result.note.file);
+					const leaf = this.app.workspace.getLeaf();
+					await leaf.openFile(result.note.file);
+					
+					// Position cursor at the end of the file
+					// Use setTimeout to ensure the editor is fully loaded
+					setTimeout(() => {
+						const view = leaf.view;
+						if (view != null && 'editor' in view) {
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
+							const editor = (view as any).editor;
+							if (editor != null) {
+								const lastLine = editor.lastLine();
+								const lastLineLength = editor.getLine(lastLine).length;
+								editor.setCursor({ line: lastLine, ch: lastLineLength });
+							}
+						}
+					}, 50);
 				}
 
 				// Show success notification
