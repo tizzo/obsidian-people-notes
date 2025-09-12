@@ -33,7 +33,8 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 		try {
 			// Construct path to person's TOC file
 			const personDirectory = note.filePath.substring(0, note.filePath.lastIndexOf('/'));
-			const tocPath = `${personDirectory}/${this.settings.tableOfContentsFileName}`;
+			const tocFileName = this.generateTocFileName(note.personName);
+			const tocPath = `${personDirectory}/${tocFileName}`;
 			
 			let tocFile = this.vault.getAbstractFileByPath(tocPath) as TFile;
 			let tocContent = '';
@@ -131,6 +132,10 @@ This file tracks all notes for ${personName}, automatically updated when new not
 		return lines.join('\n');
 	}
 
+	private generateTocFileName(personName: string): string {
+		return this.settings.tableOfContentsFileName.replace('{name}', personName);
+	}
+
 	async regenerateTableOfContents(personName: string): Promise<boolean> {
 		try {
 			if (!this.directoryManager) {
@@ -146,7 +151,8 @@ This file tracks all notes for ${personName}, automatically updated when new not
 			}
 
 			// Construct path to person's TOC file
-			const tocPath = `${personInfo.directoryPath}/${this.settings.tableOfContentsFileName}`;
+			const tocFileName = this.generateTocFileName(personName);
+			const tocPath = `${personInfo.directoryPath}/${tocFileName}`;
 			
 			// Create fresh TOC content
 			const tocContent = this.createInitialTocContent(personName);

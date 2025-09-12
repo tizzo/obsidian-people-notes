@@ -37,12 +37,12 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 		// Table of Contents Filename Setting
 		new Setting(containerEl)
 			.setName('Table of Contents filename')
-			.setDesc('The filename for the table of contents file that will be created in each person\'s directory')
+			.setDesc('The filename template for table of contents files. Use {name} as placeholder for person\'s name.')
 			.addText(text => text
-				.setPlaceholder('Table of Contents.md')
+				.setPlaceholder('{name} Meeting Notes.md')
 				.setValue(this.plugin.settings.tableOfContentsFileName)
 				.onChange(async (value) => {
-					this.plugin.settings.tableOfContentsFileName = value.trim() || 'Table of Contents.md';
+					this.plugin.settings.tableOfContentsFileName = value.trim() || '{name} Meeting Notes.md';
 					await this.plugin.saveSettings();
 				}));
 
@@ -145,13 +145,16 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 		exampleContainer.style.fontFamily = 'var(--font-monospace)';
 		exampleContainer.style.fontSize = '12px';
 		
+		const exampleTocFileName = this.plugin.settings.tableOfContentsFileName.replace('{name}', 'John Doe');
+		const exampleTocFileName2 = this.plugin.settings.tableOfContentsFileName.replace('{name}', 'Jane Smith');
+		
 		exampleContainer.textContent = `${this.plugin.settings.peopleDirectoryPath}/
 ├── John Doe/
-│   ├── ${this.plugin.settings.tableOfContentsFileName}
+│   ├── ${exampleTocFileName}
 │   ├── John Doe 2025-09-11--10-18-48.md
 │   └── John Doe 2025-09-12--14-30-15.md
 └── Jane Smith/
-    ├── ${this.plugin.settings.tableOfContentsFileName}
+    ├── ${exampleTocFileName2}
     └── Jane Smith 2025-09-11--16-45-22.md`;
 
 		// Reset to Defaults Button
@@ -164,7 +167,7 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 				.onClick(async () => {
 					this.plugin.settings = { ...this.plugin.settings, ...{
 						peopleDirectoryPath: 'People',
-						tableOfContentsFileName: 'Table of Contents.md',
+						tableOfContentsFileName: '{name} Meeting Notes.md',
 						embeddingFormat: 'wikilink' as EmbeddingFormat,
 						timestampFormat: 'iso-with-seconds' as TimestampFormat,
 						noteEmbedType: 'link' as NoteEmbedType,

@@ -38,7 +38,7 @@ export interface PeopleNotesSettings {
  */
 export const DEFAULT_SETTINGS: PeopleNotesSettings = {
 	peopleDirectoryPath: 'People',
-	tableOfContentsFileName: 'Table of Contents.md',
+	tableOfContentsFileName: '{name} Meeting Notes.md',
 	embeddingFormat: 'wikilink',
 	timestampFormat: 'iso-with-seconds',
 	noteEmbedType: 'link',

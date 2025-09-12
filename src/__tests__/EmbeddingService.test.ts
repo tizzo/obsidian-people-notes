@@ -285,13 +285,13 @@ describe('EmbeddingService', () => {
 
 			expect(result).toBe(true);
 			expect(mockVault.create).toHaveBeenCalledWith(
-				'People/John Doe/Table of Contents.md',
+				'People/John Doe/John Doe Meeting Notes.md',
 				expect.stringContaining('# John Doe Meeting Notes')
 			);
 		});
 
 		it('should update existing per-person TOC file', async () => {
-			const existingTocFile = new (TFile as any)('People/John Doe/Table of Contents.md');
+			const existingTocFile = new (TFile as any)('People/John Doe/John Doe Meeting Notes.md');
 			const existingContent = `# Notes for John Doe
 
 This file tracks all notes for John Doe, automatically updated when new notes are created.
@@ -322,7 +322,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 
 			expect(result).toBe(true);
 			expect(mockVault.create).toHaveBeenCalledWith(
-				'People/John Doe/Table of Contents.md',
+				'People/John Doe/John Doe Meeting Notes.md',
 				expect.stringContaining('# John Doe Meeting Notes')
 			);
 		});
@@ -333,7 +333,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			const linkSettings = { ...DEFAULT_SETTINGS, tocContentType: 'link' as const };
 			const linkEmbeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, linkSettings, mockDirectoryManager);
 			
-			const existingTocFile = new (TFile as any)('People/John Doe/Table of Contents.md');
+			const existingTocFile = new (TFile as any)('People/John Doe/John Doe Meeting Notes.md');
 			const existingContent = `# John Doe Meeting Notes
 
 This file tracks all notes for John Doe, automatically updated when new notes are created.
@@ -362,7 +362,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			const embedSettings = { ...DEFAULT_SETTINGS, tocContentType: 'embed' as const };
 			const embedEmbeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, embedSettings, mockDirectoryManager);
 			
-			const existingTocFile = new (TFile as any)('People/John Doe/Table of Contents.md');
+			const existingTocFile = new (TFile as any)('People/John Doe/John Doe Meeting Notes.md');
 			const existingContent = `# John Doe Meeting Notes
 
 This file tracks all notes for John Doe, automatically updated when new notes are created.
@@ -407,7 +407,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			};
 
 			mockDirectoryManager.getPersonInfo.mockResolvedValue(mockPersonInfo);
-			const existingTocFile = new (TFile as any)('People/John Doe/Table of Contents.md');
+			const existingTocFile = new (TFile as any)('People/John Doe/John Doe Meeting Notes.md');
 			mockVault.getAbstractFileByPath.mockReturnValue(existingTocFile);
 
 			const result = await embeddingService.regenerateTableOfContents('John Doe');
@@ -441,7 +441,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 
 			expect(result).toBe(true);
 			expect(mockVault.create).toHaveBeenCalledWith(
-				'People/Jane Smith/Table of Contents.md',
+				'People/Jane Smith/Jane Smith Meeting Notes.md',
 				expect.stringMatching(/# Jane Smith Meeting Notes[\s\S]*- \[\[Jane Smith 2025-09-11--16-45-22\]\]/)
 			);
 		});
