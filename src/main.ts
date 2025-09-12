@@ -44,7 +44,8 @@ export default class PeopleNotesPlugin extends Plugin {
 	private initializeServices(): void {
 		this.directoryManager = new DirectoryManagerImpl(
 			this.app.vault,
-			this.settings.peopleDirectoryPath
+			this.settings.peopleDirectoryPath,
+			this.settings
 		);
 
 		this.embeddingService = new EmbeddingServiceImpl(

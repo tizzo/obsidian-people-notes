@@ -1,4 +1,4 @@
-import { DirectoryManager, PersonInfo } from '../types';
+import { DirectoryManager, PersonInfo, DEFAULT_SETTINGS } from '../types';
 import { DirectoryManagerImpl } from '../DirectoryManager';
 import { TFile, TFolder, Vault } from 'obsidian';
 
@@ -21,7 +21,7 @@ describe('DirectoryManager', () => {
 			return Promise.resolve(folder);
 		});
 
-		directoryManager = new DirectoryManagerImpl(mockVault, 'People');
+		directoryManager = new DirectoryManagerImpl(mockVault, 'People', DEFAULT_SETTINGS);
 	});
 
 	describe('normalizePersonName', () => {
@@ -139,6 +139,44 @@ describe('DirectoryManager', () => {
 			expect(janeSmith).toBeDefined();
 			expect(johnDoe?.directoryPath).toBe('People/John Doe');
 			expect(janeSmith?.directoryPath).toBe('People/Jane Smith');
+		});
+
+		it('should exclude TOC files from person notes', async () => {
+			const peopleFolder = new (TFolder as any)('People');
+			const johnDoeFolder = new (TFolder as any)('People/John Doe');
+			
+			// Create mock files including a TOC file and regular notes
+			const tocFile = new (TFile as any)('People/John Doe/John Doe Meeting Notes.md');
+			const note1 = new (TFile as any)('People/John Doe/John Doe 2025-09-11--10-18-48.md');
+			const note2 = new (TFile as any)('People/John Doe/John Doe 2025-09-12--14-30-15.md');
+			
+			// Set file properties
+			tocFile.extension = 'md';
+			tocFile.name = 'John Doe Meeting Notes.md';
+			note1.extension = 'md';
+			note1.name = 'John Doe 2025-09-11--10-18-48.md';
+			note1.stat = { mtime: Date.now() };
+			note2.extension = 'md';
+			note2.name = 'John Doe 2025-09-12--14-30-15.md';
+			note2.stat = { mtime: Date.now() };
+			
+			johnDoeFolder.children = [tocFile, note1, note2];
+			peopleFolder.children = [johnDoeFolder];
+			
+			mockVault.getFolderByPath.mockReturnValue(peopleFolder);
+			
+			const people = await directoryManager.getAllPeople();
+			expect(people.length).toBe(1);
+			
+			const johnDoe = people[0];
+			expect(johnDoe?.name).toBe('John Doe');
+			expect(johnDoe?.notes.length).toBe(2); // Should only include the 2 regular notes, not the TOC
+			
+			// Verify that notes don't include the TOC file
+			const noteNames = johnDoe?.notes.map(note => note.fileName) || [];
+			expect(noteNames).toContain('John Doe 2025-09-11--10-18-48.md');
+			expect(noteNames).toContain('John Doe 2025-09-12--14-30-15.md');
+			expect(noteNames).not.toContain('John Doe Meeting Notes.md');
 		});
 	});
 });

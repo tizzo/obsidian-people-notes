@@ -1,10 +1,11 @@
 import { Vault, TFile, TFolder } from 'obsidian';
-import { DirectoryManager, PersonInfo, NoteInfo } from './types';
+import { DirectoryManager, PersonInfo, NoteInfo, PeopleNotesSettings } from './types';
 
 export class DirectoryManagerImpl implements DirectoryManager {
 	constructor(
 		private readonly vault: Vault,
-		private readonly peopleDirectoryPath: string
+		private readonly peopleDirectoryPath: string,
+		private readonly settings: PeopleNotesSettings
 	) {}
 
 	normalizePersonName(name: string): string {
@@ -88,9 +89,10 @@ export class DirectoryManagerImpl implements DirectoryManager {
 
 	private async getNotesInFolder(folder: TFolder, personName: string): Promise<readonly NoteInfo[]> {
 		const notes: NoteInfo[] = [];
+		const tocFileName = this.generateTocFileName(personName);
 		
 		for (const child of folder.children) {
-			if (child instanceof TFile && child.extension === 'md') {
+			if (child instanceof TFile && child.extension === 'md' && child.name !== tocFileName) {
 				const noteInfo = this.parseNoteInfo(child, personName);
 				if (noteInfo) {
 					notes.push(noteInfo);
@@ -166,5 +168,9 @@ export class DirectoryManagerImpl implements DirectoryManager {
 			minute ?? 0, 
 			second ?? 0
 		);
+	}
+
+	private generateTocFileName(personName: string): string {
+		return this.settings.tableOfContentsFileName.replace('{name}', personName);
 	}
 }
