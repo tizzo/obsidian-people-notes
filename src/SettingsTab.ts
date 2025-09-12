@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import { EmbeddingFormat, TimestampFormat, NoteEmbedType } from './types';
+import { EmbeddingFormat, TimestampFormat, NoteEmbedType, TocContentType } from './types';
 import PeopleNotesPlugin from './main';
 
 export class PeopleNotesSettingTab extends PluginSettingTab {
@@ -72,6 +72,19 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		// TOC Content Type Setting
+		new Setting(containerEl)
+			.setName('Table of Contents format')
+			.setDesc('Choose whether TOC entries should be links or embeds. Embeds will show note content inline within the TOC.')
+			.addDropdown(dropdown => dropdown
+				.addOption('link', 'Link ([[Note Name]]) - References the note')
+				.addOption('embed', 'Embed (![[Note Name]]) - Shows note content inline')
+				.setValue(this.plugin.settings.tocContentType)
+				.onChange(async (value: string) => {
+					this.plugin.settings.tocContentType = value as TocContentType;
+					await this.plugin.saveSettings();
+				}));
+
 		// Timestamp Format Setting
 		new Setting(containerEl)
 			.setName('Timestamp format')
@@ -117,6 +130,9 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 		
 		commandsList.createEl('li').innerHTML = 
 			'<strong>Open People Directory</strong> - Navigates to the people directory';
+		
+		commandsList.createEl('li').innerHTML = 
+			'<strong>Regenerate Person TOC</strong> - Select a person and regenerate their table of contents';
 
 		// File Structure Example
 		const structureContainer = containerEl.createEl('div');
@@ -151,7 +167,8 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 						tableOfContentsFileName: 'Table of Contents.md',
 						embeddingFormat: 'wikilink' as EmbeddingFormat,
 						timestampFormat: 'iso-with-seconds' as TimestampFormat,
-						noteEmbedType: 'link' as NoteEmbedType
+						noteEmbedType: 'link' as NoteEmbedType,
+						tocContentType: 'link' as TocContentType
 					}};
 					await this.plugin.saveSettings();
 					this.display(); // Refresh the settings display

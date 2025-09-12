@@ -50,7 +50,8 @@ export default class PeopleNotesPlugin extends Plugin {
 		this.embeddingService = new EmbeddingServiceImpl(
 			this.app.vault,
 			this.app.workspace,
-			this.settings
+			this.settings,
+			this.directoryManager
 		);
 
 		this.peopleNotesService = new PeopleNotesServiceImpl(
@@ -101,6 +102,15 @@ export default class PeopleNotesPlugin extends Plugin {
 			}
 		});
 
+		// Command to regenerate TOC for a selected person
+		this.addCommand({
+			id: 'regenerate-person-toc',
+			name: 'Regenerate Person TOC',
+			callback: () => {
+				this.showPersonSelectorForTocRegeneration();
+			}
+		});
+
 	}
 
 	private showPersonSelector(): void {
@@ -109,6 +119,17 @@ export default class PeopleNotesPlugin extends Plugin {
 			this.fuzzySearchService,
 			(person: PersonInfo, isNewPerson: boolean) => {
 				this.createNoteForPerson(person, isNewPerson);
+			}
+		);
+		modal.open();
+	}
+
+	private showPersonSelectorForTocRegeneration(): void {
+		const modal = new PersonSelectorModal(
+			this.app,
+			this.fuzzySearchService,
+			(person: PersonInfo, isNewPerson: boolean) => {
+				this.regenerateTocForPerson(person, isNewPerson);
 			}
 		);
 		modal.open();
@@ -165,6 +186,26 @@ export default class PeopleNotesPlugin extends Plugin {
 		} catch (error) {
 			console.error('Error creating people note:', error);
 			this.showNotice('Failed to create people note', true);
+		}
+	}
+
+	private async regenerateTocForPerson(person: PersonInfo, isNewPerson: boolean): Promise<void> {
+		if (isNewPerson) {
+			this.showNotice('Cannot regenerate TOC for new person - create a note first', true);
+			return;
+		}
+
+		try {
+			const success = await this.embeddingService.regenerateTableOfContents(person.name);
+			
+			if (success) {
+				this.showNotice(`Regenerated table of contents for ${person.name}`);
+			} else {
+				this.showNotice(`Failed to regenerate table of contents for ${person.name}`, true);
+			}
+		} catch (error) {
+			console.error('Error regenerating TOC:', error);
+			this.showNotice('Failed to regenerate table of contents', true);
 		}
 	}
 

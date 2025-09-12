@@ -1,4 +1,4 @@
-import { EmbeddingService, NoteInfo, EmbeddingFormat, DEFAULT_SETTINGS } from '../types';
+import { EmbeddingService, NoteInfo, EmbeddingFormat, DEFAULT_SETTINGS, DirectoryManager, PersonInfo } from '../types';
 import { EmbeddingServiceImpl } from '../EmbeddingService';
 import { Vault, Workspace, TFile } from 'obsidian';
 
@@ -6,6 +6,7 @@ describe('EmbeddingService', () => {
 	let embeddingService: EmbeddingService;
 	let mockVault: jest.Mocked<Vault>;
 	let mockWorkspace: jest.Mocked<Workspace>;
+	let mockDirectoryManager: jest.Mocked<DirectoryManager>;
 	let mockNote: NoteInfo;
 
 	beforeEach(() => {
@@ -20,12 +21,20 @@ describe('EmbeddingService', () => {
 			getActiveFile: jest.fn(),
 		} as any;
 
+		mockDirectoryManager = {
+			getPersonInfo: jest.fn(),
+			ensurePeopleDirectory: jest.fn(),
+			ensurePersonDirectory: jest.fn(),
+			getAllPeople: jest.fn(),
+			normalizePersonName: jest.fn(),
+		} as any;
+
 		// Default mock implementations
 		mockVault.read.mockResolvedValue('');
 		mockVault.modify.mockResolvedValue();
 		mockVault.create.mockResolvedValue(new (TFile as any)('test.md'));
 
-		embeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, DEFAULT_SETTINGS);
+		embeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, DEFAULT_SETTINGS, mockDirectoryManager);
 		
 		mockNote = {
 			personName: 'John Doe',
@@ -277,7 +286,7 @@ describe('EmbeddingService', () => {
 			expect(result).toBe(true);
 			expect(mockVault.create).toHaveBeenCalledWith(
 				'People/John Doe/Table of Contents.md',
-				expect.stringContaining('# Notes for John Doe')
+				expect.stringContaining('# John Doe Meeting Notes')
 			);
 		});
 
@@ -301,6 +310,187 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 				existingTocFile,
 				expect.stringContaining('[[John Doe 2025-09-11--10-18-48]]')
 			);
+		});
+	});
+
+	describe('Meeting Notes title format', () => {
+		it('should create TOC with Meeting Notes title format', async () => {
+			mockVault.getAbstractFileByPath.mockReturnValue(null); // TOC doesn't exist
+			mockVault.create.mockResolvedValue(new (TFile as any)('toc.md'));
+
+			const result = await embeddingService.updateTableOfContents(mockNote);
+
+			expect(result).toBe(true);
+			expect(mockVault.create).toHaveBeenCalledWith(
+				'People/John Doe/Table of Contents.md',
+				expect.stringContaining('# John Doe Meeting Notes')
+			);
+		});
+	});
+
+	describe('TOC content type settings', () => {
+		it('should use link format in TOC when tocContentType is link', async () => {
+			const linkSettings = { ...DEFAULT_SETTINGS, tocContentType: 'link' as const };
+			const linkEmbeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, linkSettings, mockDirectoryManager);
+			
+			const existingTocFile = new (TFile as any)('People/John Doe/Table of Contents.md');
+			const existingContent = `# John Doe Meeting Notes
+
+This file tracks all notes for John Doe, automatically updated when new notes are created.
+
+---
+
+`;
+
+			mockVault.getAbstractFileByPath.mockReturnValue(existingTocFile);
+			mockVault.read.mockResolvedValue(existingContent);
+
+			const result = await linkEmbeddingService.updateTableOfContents(mockNote);
+
+			expect(result).toBe(true);
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				existingTocFile,
+				expect.stringContaining('- [[John Doe 2025-09-11--10-18-48]]')
+			);
+			expect(mockVault.modify).not.toHaveBeenCalledWith(
+				existingTocFile,
+				expect.stringContaining('- ![[John Doe 2025-09-11--10-18-48]]')
+			);
+		});
+
+		it('should use embed format in TOC when tocContentType is embed', async () => {
+			const embedSettings = { ...DEFAULT_SETTINGS, tocContentType: 'embed' as const };
+			const embedEmbeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, embedSettings, mockDirectoryManager);
+			
+			const existingTocFile = new (TFile as any)('People/John Doe/Table of Contents.md');
+			const existingContent = `# John Doe Meeting Notes
+
+This file tracks all notes for John Doe, automatically updated when new notes are created.
+
+---
+
+`;
+
+			mockVault.getAbstractFileByPath.mockReturnValue(existingTocFile);
+			mockVault.read.mockResolvedValue(existingContent);
+
+			const result = await embedEmbeddingService.updateTableOfContents(mockNote);
+
+			expect(result).toBe(true);
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				existingTocFile,
+				expect.stringContaining('- ![[John Doe 2025-09-11--10-18-48]]')
+			);
+		});
+	});
+
+	describe('regenerateTableOfContents', () => {
+		it('should regenerate TOC with all notes for a person', async () => {
+			const mockPersonInfo: PersonInfo = {
+				name: 'John Doe',
+				normalizedName: 'john-doe',
+				directoryPath: 'People/John Doe',
+				notes: [
+					{
+						personName: 'John Doe',
+						fileName: 'John Doe 2025-09-11--10-18-48.md',
+						filePath: 'People/John Doe/John Doe 2025-09-11--10-18-48.md',
+						timestamp: new Date('2025-09-11T10:18:48')
+					},
+					{
+						personName: 'John Doe',
+						fileName: 'John Doe 2025-09-12--14-30-15.md',
+						filePath: 'People/John Doe/John Doe 2025-09-12--14-30-15.md',
+						timestamp: new Date('2025-09-12T14:30:15')
+					}
+				]
+			};
+
+			mockDirectoryManager.getPersonInfo.mockResolvedValue(mockPersonInfo);
+			const existingTocFile = new (TFile as any)('People/John Doe/Table of Contents.md');
+			mockVault.getAbstractFileByPath.mockReturnValue(existingTocFile);
+
+			const result = await embeddingService.regenerateTableOfContents('John Doe');
+
+			expect(result).toBe(true);
+			expect(mockDirectoryManager.getPersonInfo).toHaveBeenCalledWith('John Doe');
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				existingTocFile,
+				expect.stringMatching(/# John Doe Meeting Notes[\s\S]*- \[\[John Doe 2025-09-12--14-30-15\]\][\s\S]*- \[\[John Doe 2025-09-11--10-18-48\]\]/)
+			);
+		});
+
+		it('should create new TOC file if it does not exist during regeneration', async () => {
+			const mockPersonInfo: PersonInfo = {
+				name: 'Jane Smith',
+				normalizedName: 'jane-smith',
+				directoryPath: 'People/Jane Smith',
+				notes: [{
+					personName: 'Jane Smith',
+					fileName: 'Jane Smith 2025-09-11--16-45-22.md',
+					filePath: 'People/Jane Smith/Jane Smith 2025-09-11--16-45-22.md',
+					timestamp: new Date('2025-09-11T16:45:22')
+				}]
+			};
+
+			mockDirectoryManager.getPersonInfo.mockResolvedValue(mockPersonInfo);
+			mockVault.getAbstractFileByPath.mockReturnValue(null); // TOC doesn't exist
+			mockVault.create.mockResolvedValue(new (TFile as any)('toc.md'));
+
+			const result = await embeddingService.regenerateTableOfContents('Jane Smith');
+
+			expect(result).toBe(true);
+			expect(mockVault.create).toHaveBeenCalledWith(
+				'People/Jane Smith/Table of Contents.md',
+				expect.stringMatching(/# Jane Smith Meeting Notes[\s\S]*- \[\[Jane Smith 2025-09-11--16-45-22\]\]/)
+			);
+		});
+
+		it('should return false when person is not found', async () => {
+			// Suppress console.error during this test
+			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+			mockDirectoryManager.getPersonInfo.mockResolvedValue(null);
+
+			const result = await embeddingService.regenerateTableOfContents('Nonexistent Person');
+
+			expect(result).toBe(false);
+			expect(mockDirectoryManager.getPersonInfo).toHaveBeenCalledWith('Nonexistent Person');
+			expect(mockVault.create).not.toHaveBeenCalled();
+			expect(mockVault.modify).not.toHaveBeenCalled();
+
+			// Restore console.error
+			consoleErrorSpy.mockRestore();
+		});
+
+		it('should return false when DirectoryManager is not provided', async () => {
+			// Suppress console.error during this test
+			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+			const embeddingServiceWithoutDM = new EmbeddingServiceImpl(mockVault, mockWorkspace, DEFAULT_SETTINGS);
+
+			const result = await embeddingServiceWithoutDM.regenerateTableOfContents('John Doe');
+
+			expect(result).toBe(false);
+			expect(mockVault.create).not.toHaveBeenCalled();
+			expect(mockVault.modify).not.toHaveBeenCalled();
+
+			// Restore console.error
+			consoleErrorSpy.mockRestore();
+		});
+
+		it('should handle errors gracefully during regeneration', async () => {
+			// Suppress console.error during this test
+			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+			mockDirectoryManager.getPersonInfo.mockRejectedValue(new Error('Directory error'));
+
+			const result = await embeddingService.regenerateTableOfContents('John Doe');
+
+			expect(result).toBe(false);
+
+			// Restore console.error
+			consoleErrorSpy.mockRestore();
 		});
 	});
 });

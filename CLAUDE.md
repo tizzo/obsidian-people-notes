@@ -4,14 +4,17 @@ This file contains context and instructions for Claude when working on the Peopl
 
 ## Project Overview
 
-**People Notes** is an Obsidian plugin that creates timestamped notes for people in organized directories with automatic embedding and table of contents management.
+**People Notes** is an Obsidian plugin that creates timestamped notes for people in organized directories with automatic embedding and per-person table of contents management.
 
 ### Key Features
 - Create notes for people in structured `People/{PersonName}/` directories
 - Automatic timestamping: `{Name} YYYY-MM-DD--HH-mm-ss.md`
-- Fuzzy search person selector with autocomplete
-- Automatic embedding in current note and table of contents
-- Full TypeScript with strict typing and comprehensive test coverage
+- Fuzzy search person selector with autocomplete that finds existing people or creates new ones
+- Configurable embedding: Choose between linking (`[[note]]`) or embedding (`![[note]]`) in current notes
+- Per-person table of contents: Each person gets their own automatically-maintained TOC file
+- Clean note templates: Minimal structure with cursor positioned at end for immediate writing
+- Comprehensive settings: Customizable directory paths, embedding formats, timestamp precision
+- Full TypeScript with strict typing and comprehensive test coverage (64 tests)
 
 ## Architecture
 
@@ -84,7 +87,7 @@ Each service has comprehensive unit tests with mocked dependencies:
 - **DirectoryManager**: 13 tests covering file operations, name normalization, person info retrieval
 - **PeopleNotesService**: 11 tests covering note creation, timestamp formatting, integration
 - **FuzzySearchService**: 14 tests covering search algorithms, scoring, result ranking
-- **EmbeddingService**: 17 tests covering note embedding, TOC management, link formatting
+- **EmbeddingService**: 26 tests covering note embedding, per-person TOC management, configurable link/embed formats
 
 ### Mock Strategy
 - Obsidian API is comprehensively mocked in `__tests__/__mocks__/obsidian.ts`
@@ -126,11 +129,12 @@ Each service has comprehensive unit tests with mocked dependencies:
 ```
 vault/
 ├── People/
-│   ├── Table of Contents.md
 │   ├── John Doe/
+│   │   ├── Table of Contents.md
 │   │   ├── John Doe 2025-09-11--10-18-48.md
 │   │   └── John Doe 2025-09-12--14-30-15.md
 │   └── Jane Smith/
+│       ├── Table of Contents.md
 │       └── Jane Smith 2025-09-11--16-45-22.md
 ```
 
@@ -138,8 +142,9 @@ vault/
 
 The plugin supports these settings (see `src/types.ts` for full interface):
 - **peopleDirectoryPath**: Base directory for people notes (default: "People")
-- **tableOfContentsPath**: TOC file location (default: "People/Table of Contents.md")
+- **tableOfContentsFileName**: Per-person TOC filename (default: "Table of Contents.md")
 - **embeddingFormat**: Link format - "wikilink" or "markdown-link"
+- **noteEmbedType**: Embedding style - "link" or "embed" for `[[note]]` vs `![[note]]`
 - **timestampFormat**: Timestamp precision - "iso-with-seconds" or "iso-without-seconds"
 
 ## Best Practices for Future Development
@@ -176,7 +181,7 @@ The plugin supports these settings (see `src/types.ts` for full interface):
 **MANDATORY**: Always run these commands before any commit:
 
 1. **Lint Check**: `npm run lint` - Must pass with no errors
-2. **Test Suite**: `npm test` - All 55+ tests must pass
+2. **Test Suite**: `npm test` - All 64 tests must pass
 3. **Build Verification**: `npm run build` - Must compile without errors
 
 If any of these fail, fix the issues before committing. This ensures code quality and prevents broken builds.
@@ -203,7 +208,7 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `chore`
 
 ## Current Status
 
-✅ **Completed**: Full plugin implementation with 55 passing tests, 90%+ coverage on core services
+✅ **Completed**: Full plugin implementation with 64 passing tests, 90%+ coverage on core services
 ✅ **Tested**: All major workflows and edge cases covered
 ✅ **Ready**: Plugin builds successfully and ready for local testing
 

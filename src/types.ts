@@ -30,6 +30,7 @@ export interface PeopleNotesSettings {
 	embeddingFormat: EmbeddingFormat;
 	timestampFormat: TimestampFormat;
 	noteEmbedType: NoteEmbedType;
+	tocContentType: TocContentType;
 }
 
 /**
@@ -40,7 +41,8 @@ export const DEFAULT_SETTINGS: PeopleNotesSettings = {
 	tableOfContentsFileName: 'Table of Contents.md',
 	embeddingFormat: 'wikilink',
 	timestampFormat: 'iso-with-seconds',
-	noteEmbedType: 'link'
+	noteEmbedType: 'link',
+	tocContentType: 'link'
 } as const;
 
 /**
@@ -57,6 +59,11 @@ export type TimestampFormat = 'iso-with-seconds' | 'iso-without-seconds';
  * Options for how notes are embedded in current document
  */
 export type NoteEmbedType = 'link' | 'embed';
+
+/**
+ * Options for how notes are displayed in table of contents
+ */
+export type TocContentType = 'link' | 'embed';
 
 /**
  * Result of a person search operation
@@ -166,6 +173,11 @@ export interface EmbeddingService {
 	 * Updates the table of contents with a new note
 	 */
 	updateTableOfContents(note: NoteInfo): Promise<boolean>;
+
+	/**
+	 * Regenerates the table of contents for a specific person
+	 */
+	regenerateTableOfContents(personName: string): Promise<boolean>;
 
 	/**
 	 * Formats a note link for embedding

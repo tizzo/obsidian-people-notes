@@ -1,11 +1,12 @@
 import { Vault, Workspace, TFile } from 'obsidian';
-import { EmbeddingService, NoteInfo, EmbeddingFormat, NoteEmbedType, PeopleNotesSettings } from './types';
+import { EmbeddingService, NoteInfo, EmbeddingFormat, NoteEmbedType, PeopleNotesSettings, DirectoryManager } from './types';
 
 export class EmbeddingServiceImpl implements EmbeddingService {
 	constructor(
 		private readonly vault: Vault,
 		private readonly workspace: Workspace,
-		private readonly settings: PeopleNotesSettings
+		private readonly settings: PeopleNotesSettings,
+		private readonly directoryManager?: DirectoryManager
 	) {}
 
 	async embedInCurrentNote(note: NoteInfo): Promise<boolean> {
@@ -85,7 +86,7 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 	}
 
 	private createInitialTocContent(personName: string): string {
-		return `# Notes for ${personName}
+		return `# ${personName} Meeting Notes
 
 This file tracks all notes for ${personName}, automatically updated when new notes are created.
 
@@ -95,7 +96,7 @@ This file tracks all notes for ${personName}, automatically updated when new not
 	}
 
 	private updatePersonTocWithNote(tocContent: string, note: NoteInfo): string {
-		const noteLink = this.formatNoteLink(note, this.settings.embeddingFormat, 'link'); // TOC always uses links, not embeds
+		const noteLink = this.formatNoteLink(note, this.settings.embeddingFormat, this.settings.tocContentType);
 		const noteEntry = `- ${noteLink}`;
 
 		// Check if note already exists in TOC to avoid duplicates
@@ -128,6 +129,47 @@ This file tracks all notes for ${personName}, automatically updated when new not
 		// Insert the new note at the beginning of the list (newest first)
 		lines.splice(insertIndex, 0, noteEntry);
 		return lines.join('\n');
+	}
+
+	async regenerateTableOfContents(personName: string): Promise<boolean> {
+		try {
+			if (!this.directoryManager) {
+				console.error('DirectoryManager is required for TOC regeneration');
+				return false;
+			}
+
+			// Get all notes for this person
+			const personInfo = await this.directoryManager.getPersonInfo(personName);
+			if (!personInfo) {
+				console.error(`Person not found: ${personName}`);
+				return false;
+			}
+
+			// Construct path to person's TOC file
+			const tocPath = `${personInfo.directoryPath}/${this.settings.tableOfContentsFileName}`;
+			
+			// Create fresh TOC content
+			const tocContent = this.createInitialTocContent(personName);
+			
+			// Add all notes to the TOC
+			let updatedContent = tocContent;
+			for (const note of personInfo.notes) {
+				updatedContent = this.updatePersonTocWithNote(updatedContent, note);
+			}
+
+			// Create or update the TOC file
+			let tocFile = this.vault.getAbstractFileByPath(tocPath) as TFile;
+			if (tocFile == null) {
+				tocFile = await this.vault.create(tocPath, updatedContent);
+			} else {
+				await this.vault.modify(tocFile, updatedContent);
+			}
+
+			return true;
+		} catch (error) {
+			console.error('Failed to regenerate table of contents:', error);
+			return false;
+		}
 	}
 
 }
