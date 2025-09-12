@@ -14,7 +14,9 @@
       "Bash(grep:*)",
       "Bash(npm run lint)",
       "Bash(rg:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npx jest:*)",
+      "Bash(npm ls:*)"
     ],
     "deny": []
   }

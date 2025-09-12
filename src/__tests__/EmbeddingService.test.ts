@@ -171,6 +171,9 @@ describe('EmbeddingService', () => {
 		});
 
 		it('should handle TOC update errors gracefully', async () => {
+			// Suppress console.error during this test
+			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
 			// Mock file system error
 			mockVault.getAbstractFileByPath.mockImplementation(() => {
 				throw new Error('File system error');
@@ -178,6 +181,9 @@ describe('EmbeddingService', () => {
 
 			const result = await embeddingService.updateTableOfContents(mockNote);
 			expect(result).toBe(false);
+
+			// Restore console.error
+			consoleErrorSpy.mockRestore();
 		});
 
 		it('should maintain TOC file structure', async () => {

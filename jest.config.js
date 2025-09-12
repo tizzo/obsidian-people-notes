@@ -17,7 +17,7 @@ module.exports = {
 	coverageDirectory: 'coverage',
 	coverageReporters: ['text', 'lcov', 'html'],
 	setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
-	moduleNameMapping: {
+	moduleNameMapper: {
 		'^obsidian$': '<rootDir>/src/__tests__/__mocks__/obsidian'
 	},
 	testPathIgnorePatterns: [

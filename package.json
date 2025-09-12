@@ -7,9 +7,9 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs build",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"test": "jest",
-		"test:watch": "jest --watch",
-		"test:coverage": "jest --coverage",
+		"test": "NODE_NO_WARNINGS=1 jest",
+		"test:watch": "NODE_NO_WARNINGS=1 jest --watch",
+		"test:coverage": "NODE_NO_WARNINGS=1 jest --coverage",
 		"lint": "eslint src --ext .ts",
 		"lint:fix": "eslint src --ext .ts --fix",
 		"typecheck": "tsc --noEmit"
