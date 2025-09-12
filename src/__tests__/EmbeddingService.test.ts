@@ -266,4 +266,41 @@ describe('EmbeddingService', () => {
 			);
 		});
 	});
+
+	describe('updateTableOfContents with per-person TOC', () => {
+		it('should create per-person TOC file in person directory', async () => {
+			mockVault.getAbstractFileByPath.mockReturnValue(null); // TOC doesn't exist
+			mockVault.create.mockResolvedValue(new (TFile as any)('toc.md'));
+
+			const result = await embeddingService.updateTableOfContents(mockNote);
+
+			expect(result).toBe(true);
+			expect(mockVault.create).toHaveBeenCalledWith(
+				'People/John Doe/Table of Contents.md',
+				expect.stringContaining('# Notes for John Doe')
+			);
+		});
+
+		it('should update existing per-person TOC file', async () => {
+			const existingTocFile = new (TFile as any)('People/John Doe/Table of Contents.md');
+			const existingContent = `# Notes for John Doe
+
+This file tracks all notes for John Doe, automatically updated when new notes are created.
+
+---
+
+- [[Old Note]]`;
+
+			mockVault.getAbstractFileByPath.mockReturnValue(existingTocFile);
+			mockVault.read.mockResolvedValue(existingContent);
+
+			const result = await embeddingService.updateTableOfContents(mockNote);
+
+			expect(result).toBe(true);
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				existingTocFile,
+				expect.stringContaining('[[John Doe 2025-09-11--10-18-48]]')
+			);
+		});
+	});
 });

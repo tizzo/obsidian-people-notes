@@ -1,4 +1,4 @@
-import { Plugin, TFile, Notice } from 'obsidian';
+import { Plugin, Notice } from 'obsidian';
 import { PeopleNotesSettings, DEFAULT_SETTINGS, PersonInfo } from './types';
 import { DirectoryManagerImpl } from './DirectoryManager';
 import { PeopleNotesServiceImpl } from './PeopleNotesService';
@@ -101,31 +101,6 @@ export default class PeopleNotesPlugin extends Plugin {
 			}
 		});
 
-		// Command to open table of contents
-		this.addCommand({
-			id: 'open-table-of-contents',
-			name: 'Open People Notes Table of Contents',
-			callback: async () => {
-				const tocFile = this.app.vault.getAbstractFileByPath(this.settings.tableOfContentsPath) as TFile;
-				if (tocFile != null) {
-					this.app.workspace.getLeaf().openFile(tocFile);
-				} else {
-					// Create TOC file if it doesn't exist
-					const dummyNote = {
-						personName: 'Example',
-						fileName: 'example.md',
-						filePath: 'example.md',
-						timestamp: new Date()
-					};
-					await this.embeddingService.updateTableOfContents(dummyNote);
-
-					const newTocFile = this.app.vault.getAbstractFileByPath(this.settings.tableOfContentsPath) as TFile;
-					if (newTocFile != null) {
-						this.app.workspace.getLeaf().openFile(newTocFile);
-					}
-				}
-			}
-		});
 	}
 
 	private showPersonSelector(): void {

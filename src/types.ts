@@ -26,7 +26,7 @@ export interface NoteInfo {
  */
 export interface PeopleNotesSettings {
 	peopleDirectoryPath: string;
-	tableOfContentsPath: string;
+	tableOfContentsFileName: string;
 	embeddingFormat: EmbeddingFormat;
 	timestampFormat: TimestampFormat;
 	noteEmbedType: NoteEmbedType;
@@ -37,7 +37,7 @@ export interface PeopleNotesSettings {
  */
 export const DEFAULT_SETTINGS: PeopleNotesSettings = {
 	peopleDirectoryPath: 'People',
-	tableOfContentsPath: 'People/Table of Contents.md',
+	tableOfContentsFileName: 'Table of Contents.md',
 	embeddingFormat: 'wikilink',
 	timestampFormat: 'iso-with-seconds',
 	noteEmbedType: 'link'

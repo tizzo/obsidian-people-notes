@@ -30,20 +30,22 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 
 	async updateTableOfContents(note: NoteInfo): Promise<boolean> {
 		try {
-			const tocPath = this.settings.tableOfContentsPath;
+			// Construct path to person's TOC file
+			const personDirectory = note.filePath.substring(0, note.filePath.lastIndexOf('/'));
+			const tocPath = `${personDirectory}/${this.settings.tableOfContentsFileName}`;
 			let tocFile = this.vault.getAbstractFileByPath(tocPath) as TFile;
 			let tocContent = '';
 
 			// Create TOC file if it doesn't exist
 			if (tocFile == null) {
-				tocContent = this.createInitialTocContent();
+				tocContent = this.createInitialTocContent(note.personName);
 				tocFile = await this.vault.create(tocPath, tocContent);
 			} else {
 				tocContent = await this.vault.read(tocFile);
 			}
 
-			// Parse existing TOC to find or create person section
-			const updatedContent = this.updateTocWithNote(tocContent, note);
+			// Add the note to the TOC
+			const updatedContent = this.updatePersonTocWithNote(tocContent, note);
 
 			// Only modify if content changed
 			if (updatedContent !== tocContent) {
@@ -81,19 +83,18 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 		}
 	}
 
-	private createInitialTocContent(): string {
-		return `# People Notes - Table of Contents
+	private createInitialTocContent(personName: string): string {
+		return `# Notes for ${personName}
 
-This file automatically tracks all notes created for different people.
+This file tracks all notes for ${personName}, automatically updated when new notes are created.
 
 ---
 
 `;
 	}
 
-	private updateTocWithNote(tocContent: string, note: NoteInfo): string {
+	private updatePersonTocWithNote(tocContent: string, note: NoteInfo): string {
 		const lines = tocContent.split('\n');
-		const personSectionHeader = `## ${note.personName}`;
 		const noteLink = this.formatNoteLink(note, this.settings.embeddingFormat, 'link'); // TOC always uses links, not embeds
 		const noteEntry = `- ${noteLink}`;
 
@@ -102,67 +103,35 @@ This file automatically tracks all notes created for different people.
 			return tocContent;
 		}
 
-		// Find existing person section
-		let personSectionIndex = -1;
+		// Find where to insert the note (after the header and divider)
+		let insertIndex = lines.length;
+		
+		// Look for the end of the header section (after "---")
 		for (let i = 0; i < lines.length; i++) {
-			if (lines[i] === personSectionHeader) {
-				personSectionIndex = i;
+			if (lines[i]?.trim() === '---') {
+				insertIndex = i + 2; // Insert after the divider and empty line
 				break;
 			}
 		}
 
-		if (personSectionIndex !== -1) {
-			// Person section exists, add note to it
-			const notesStartIndex = personSectionIndex + 1;
+		// Find where to insert (maintain chronological order - newest first)
+		for (let i = insertIndex; i < lines.length; i++) {
+			const line = lines[i]?.trim();
 			
-			// Find where to insert (maintain chronological order - newest first)
-			let insertIndex = notesStartIndex;
-			for (let i = notesStartIndex; i < lines.length; i++) {
-				const line = lines[i]?.trim();
-				
-				// Stop at next person section or end of notes
-				if (line?.startsWith('##') === true || (line?.startsWith('-') !== true && line !== '')) {
+			if (line?.startsWith('-') === true) {
+				// Compare timestamps if possible
+				if (this.shouldInsertBefore(noteEntry, line, note)) {
+					insertIndex = i;
 					break;
 				}
-				
-				if (line?.startsWith('-') === true) {
-					// Compare timestamps if possible
-					if (this.shouldInsertBefore(noteEntry, line, note)) {
-						break;
-					}
-					insertIndex = i + 1;
-				}
+				insertIndex = i + 1;
+			} else if (line !== '') {
+				// Stop at any non-empty, non-list line
+				break;
 			}
-			
-			lines.splice(insertIndex, 0, noteEntry);
-
-		} else {
-			// Person section doesn't exist, create it
-			// Find where to insert person section (alphabetically)
-			let insertSectionIndex = lines.length;
-			
-			for (let i = 0; i < lines.length; i++) {
-				const line = lines[i]?.trim();
-				if (line?.startsWith('## ') === true) {
-					const existingPersonName = line.substring(3);
-					if (note.personName.localeCompare(existingPersonName) < 0) {
-						insertSectionIndex = i;
-						break;
-					}
-				}
-			}
-
-			// Insert person section with note
-			const personSection = [
-				'',
-				personSectionHeader,
-				noteEntry,
-				''
-			];
-
-			lines.splice(insertSectionIndex, 0, ...personSection);
 		}
 
+		lines.splice(insertIndex, 0, noteEntry);
 		return lines.join('\n');
 	}
 

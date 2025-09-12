@@ -34,15 +34,15 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		// Table of Contents Path Setting
+		// Table of Contents Filename Setting
 		new Setting(containerEl)
-			.setName('Table of Contents path')
-			.setDesc('The path to the file that will contain the table of contents for all people notes')
+			.setName('Table of Contents filename')
+			.setDesc('The filename for the table of contents file that will be created in each person\'s directory')
 			.addText(text => text
-				.setPlaceholder('People/Table of Contents.md')
-				.setValue(this.plugin.settings.tableOfContentsPath)
+				.setPlaceholder('Table of Contents.md')
+				.setValue(this.plugin.settings.tableOfContentsFileName)
 				.onChange(async (value) => {
-					this.plugin.settings.tableOfContentsPath = value.trim() || 'People/Table of Contents.md';
+					this.plugin.settings.tableOfContentsFileName = value.trim() || 'Table of Contents.md';
 					await this.plugin.saveSettings();
 				}));
 
@@ -104,7 +104,7 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 			'Select an existing person or create a new one';
 		
 		usageList.createEl('li').innerHTML = 
-			'The note will be created with a timestamp and automatically embedded in your current note and table of contents';
+			'The note will be created with a timestamp and automatically embedded in your current note and added to the person\'s table of contents';
 
 		// Available Commands
 		const commandsContainer = containerEl.createEl('div');
@@ -117,9 +117,6 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 		
 		commandsList.createEl('li').innerHTML = 
 			'<strong>Open People Directory</strong> - Navigates to the people directory';
-		
-		commandsList.createEl('li').innerHTML = 
-			'<strong>Open People Notes Table of Contents</strong> - Opens the TOC file';
 
 		// File Structure Example
 		const structureContainer = containerEl.createEl('div');
@@ -133,11 +130,12 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 		exampleContainer.style.fontSize = '12px';
 		
 		exampleContainer.textContent = `${this.plugin.settings.peopleDirectoryPath}/
-├── Table of Contents.md
 ├── John Doe/
+│   ├── ${this.plugin.settings.tableOfContentsFileName}
 │   ├── John Doe 2025-09-11--10-18-48.md
 │   └── John Doe 2025-09-12--14-30-15.md
 └── Jane Smith/
+    ├── ${this.plugin.settings.tableOfContentsFileName}
     └── Jane Smith 2025-09-11--16-45-22.md`;
 
 		// Reset to Defaults Button
@@ -150,7 +148,7 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 				.onClick(async () => {
 					this.plugin.settings = { ...this.plugin.settings, ...{
 						peopleDirectoryPath: 'People',
-						tableOfContentsPath: 'People/Table of Contents.md',
+						tableOfContentsFileName: 'Table of Contents.md',
 						embeddingFormat: 'wikilink' as EmbeddingFormat,
 						timestampFormat: 'iso-with-seconds' as TimestampFormat,
 						noteEmbedType: 'link' as NoteEmbedType
