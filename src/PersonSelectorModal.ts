@@ -62,8 +62,11 @@ export class PersonSelectorModal extends FuzzySuggestModal<PersonSearchResult> {
 	private async performAsyncSearch(query: string): Promise<void> {
 		try {
 			const results = await this.fuzzySearchService.searchPeople(query);
+			console.log(`Found ${results.length} results for query "${query}":`, results.map(r => `${r.person.name} (${r.isNewPerson ? 'new' : 'existing'}, score: ${r.matchScore})`));
 			this.cachedResults = [...results];
-			// The modal will refresh automatically when getItems() is called again
+			
+			// Force the modal to update by triggering input event
+			this.inputEl.dispatchEvent(new Event('input', { bubbles: true }));
 		} catch (error) {
 			console.error('Error searching for people:', error);
 			this.cachedResults = [];

@@ -65,10 +65,13 @@ export class DirectoryManagerImpl implements DirectoryManager {
 		const peopleFolder = this.vault.getFolderByPath(this.peopleDirectoryPath);
 		
 		if (!peopleFolder) {
+			console.log(`People directory "${this.peopleDirectoryPath}" not found`);
 			return [];
 		}
 
 		const people: PersonInfo[] = [];
+		
+		console.log(`Found people directory with ${peopleFolder.children.length} children:`, peopleFolder.children.map(c => c.name));
 		
 		for (const child of peopleFolder.children) {
 			if (child instanceof TFolder) {
@@ -83,6 +86,7 @@ export class DirectoryManagerImpl implements DirectoryManager {
 			}
 		}
 		
+		console.log(`getAllPeople returning ${people.length} people:`, people.map(p => p.name));
 		return people;
 	}
 
