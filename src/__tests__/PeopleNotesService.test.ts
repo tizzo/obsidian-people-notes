@@ -24,7 +24,7 @@ describe('PeopleNotesService', () => {
 		} as any;
 
 		// Default mock implementations
-		mockVault.create.mockResolvedValue(new TFile('test-path.md'));
+		mockVault.create.mockResolvedValue(new (TFile as any)('test-path.md'));
 		mockDirectoryManager.ensurePersonDirectory.mockResolvedValue({} as any);
 		mockEmbeddingService.embedInCurrentNote.mockResolvedValue(true);
 		mockEmbeddingService.updateTableOfContents.mockResolvedValue(true);

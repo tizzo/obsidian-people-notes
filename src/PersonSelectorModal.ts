@@ -95,20 +95,20 @@ export class PersonSelectorModal extends FuzzySuggestModal<PersonSearchResult> {
 		const titleContainer = container.createDiv({ cls: 'people-notes-suggestion-title' });
 		
 		if (result.isNewPerson) {
-			const newBadge = titleContainer.createSpan({ 
+			titleContainer.createSpan({ 
 				cls: 'people-notes-new-badge',
 				text: 'NEW'
 			});
 		}
 		
-		const nameEl = titleContainer.createSpan({ 
+		titleContainer.createSpan({ 
 			cls: 'people-notes-suggestion-name',
 			text: person.name 
 		});
 		
 		// Add note count for existing people
 		if (!result.isNewPerson && person.notes.length > 0) {
-			const noteCount = titleContainer.createSpan({ 
+			titleContainer.createSpan({ 
 				cls: 'people-notes-note-count',
 				text: `${person.notes.length} note${person.notes.length === 1 ? '' : 's'}`
 			});
@@ -135,7 +135,7 @@ export class PersonSelectorModal extends FuzzySuggestModal<PersonSearchResult> {
 		
 		// Add match score indicator for debugging (only in dev mode)
 		if (process.env.NODE_ENV === 'development') {
-			const scoreEl = container.createDiv({ 
+			container.createDiv({ 
 				cls: 'people-notes-match-score',
 				text: `Score: ${result.matchScore.toFixed(2)}`
 			});

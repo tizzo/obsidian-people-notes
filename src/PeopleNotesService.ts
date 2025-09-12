@@ -22,7 +22,7 @@ export class PeopleNotesServiceImpl implements PeopleNotesService {
 			}
 
 			// Generate the file name and path
-			const timestamp = options.timestamp || new Date();
+			const timestamp = options.timestamp ?? new Date();
 			const fileName = this.generateFileName(options.personName, timestamp);
 			const normalizedPersonName = this.directoryManager.normalizePersonName(options.personName);
 			const filePath = `${this.settings.peopleDirectoryPath}/${normalizedPersonName}/${fileName}`;
@@ -74,7 +74,7 @@ export class PeopleNotesServiceImpl implements PeopleNotesService {
 
 	generateFileName(personName: string, timestamp?: Date): string {
 		const normalizedName = this.directoryManager.normalizePersonName(personName);
-		const ts = timestamp || new Date();
+		const ts = timestamp ?? new Date();
 		const formattedTimestamp = this.formatTimestamp(ts);
 		return `${normalizedName} ${formattedTimestamp}.md`;
 	}

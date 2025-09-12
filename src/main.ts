@@ -70,6 +70,12 @@ export default class PeopleNotesPlugin extends Plugin {
 		this.addCommand({
 			id: 'create-people-note',
 			name: 'Create People Note',
+			hotkeys: [
+				{
+					modifiers: ['Mod', 'Shift'],
+					key: 'u'
+				}
+			],
 			callback: () => {
 				this.showPersonSelector();
 			}
@@ -87,6 +93,9 @@ export default class PeopleNotesPlugin extends Plugin {
 					this.app.workspace.getLeaf().setViewState({
 						type: 'file-explorer',
 						state: { folder: peopleFolder }
+
+
+
 					});
 				}
 			}
@@ -98,7 +107,7 @@ export default class PeopleNotesPlugin extends Plugin {
 			name: 'Open People Notes Table of Contents',
 			callback: async () => {
 				const tocFile = this.app.vault.getAbstractFileByPath(this.settings.tableOfContentsPath) as TFile;
-				if (tocFile) {
+				if (tocFile != null) {
 					this.app.workspace.getLeaf().openFile(tocFile);
 				} else {
 					// Create TOC file if it doesn't exist
@@ -109,9 +118,9 @@ export default class PeopleNotesPlugin extends Plugin {
 						timestamp: new Date()
 					};
 					await this.embeddingService.updateTableOfContents(dummyNote);
-					
+
 					const newTocFile = this.app.vault.getAbstractFileByPath(this.settings.tableOfContentsPath) as TFile;
-					if (newTocFile) {
+					if (newTocFile != null) {
 						this.app.workspace.getLeaf().openFile(newTocFile);
 					}
 				}
@@ -147,7 +156,7 @@ export default class PeopleNotesPlugin extends Plugin {
 				// Show success notification
 				const action = isNewPerson ? 'created' : 'added';
 				const message = `${action.charAt(0).toUpperCase() + action.slice(1)} note for ${person.name}`;
-				
+
 				if (result.embedded && result.tocUpdated) {
 					this.showNotice(`${message} and updated references`);
 				} else if (result.embedded) {
@@ -159,7 +168,7 @@ export default class PeopleNotesPlugin extends Plugin {
 				}
 
 			} else {
-				this.showNotice(`Failed to create note: ${result.error || 'Unknown error'}`, true);
+				this.showNotice(`Failed to create note: ${result.error ?? 'Unknown error'}`, true);
 			}
 
 		} catch (error) {
@@ -171,7 +180,7 @@ export default class PeopleNotesPlugin extends Plugin {
 	private showNotice(message: string, isError = false): void {
 		// Create a notice with appropriate styling
 		const notice = new Notice(message, isError ? 10000 : 5000);
-		
+
 		if (isError) {
 			// Add error styling to notice
 			notice.noticeEl.addClass('people-notes-error');
@@ -185,7 +194,7 @@ export default class PeopleNotesPlugin extends Plugin {
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
-		
+
 		// Reinitialize services with new settings
 		this.initializeServices();
 	}

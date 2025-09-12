@@ -16,9 +16,10 @@ describe('DirectoryManager', () => {
 		// Default mock behavior
 		mockVault.getAbstractFileByPath.mockReturnValue(null);
 		mockVault.getFolderByPath.mockReturnValue(null);
-		mockVault.createFolder.mockImplementation((path: string) => 
-			Promise.resolve(new TFolder(path))
-		);
+		mockVault.createFolder.mockImplementation((path: string) => {
+			const folder = new (TFolder as any)(path);
+			return Promise.resolve(folder);
+		});
 
 		directoryManager = new DirectoryManagerImpl(mockVault, 'People');
 	});
@@ -55,7 +56,7 @@ describe('DirectoryManager', () => {
 
 		it('should return existing People directory if it exists', async () => {
 			// Mock that directory already exists
-			const existingFolder = new TFolder('People');
+			const existingFolder = new (TFolder as any)('People');
 			mockVault.getAbstractFileByPath.mockReturnValue(existingFolder);
 			
 			const folder = await directoryManager.ensurePeopleDirectory();
@@ -87,7 +88,7 @@ describe('DirectoryManager', () => {
 
 		it('should return PersonInfo for existing person with notes', async () => {
 			// Setup: mock an existing person directory
-			const personFolder = new TFolder('People/John Doe');
+			const personFolder = new (TFolder as any)('People/John Doe');
 			personFolder.children = []; // No notes for now
 			mockVault.getFolderByPath.mockReturnValue(personFolder);
 			
@@ -101,8 +102,8 @@ describe('DirectoryManager', () => {
 
 		it('should include all notes for a person', async () => {
 			// Setup: mock person directory with notes
-			const personFolder = new TFolder('People/John Doe');
-			const noteFile = new TFile('People/John Doe/John Doe 2025-09-11--10-18-48.md');
+			const personFolder = new (TFolder as any)('People/John Doe');
+			const noteFile = new (TFile as any)('People/John Doe/John Doe 2025-09-11--10-18-48.md');
 			personFolder.children = [noteFile];
 			mockVault.getFolderByPath.mockReturnValue(personFolder);
 			
@@ -119,9 +120,9 @@ describe('DirectoryManager', () => {
 
 		it('should return all people with their notes', async () => {
 			// Setup: mock people directory with subdirectories
-			const peopleFolder = new TFolder('People');
-			const johnDoeFolder = new TFolder('People/John Doe');
-			const janeSmithFolder = new TFolder('People/Jane Smith');
+			const peopleFolder = new (TFolder as any)('People');
+			const johnDoeFolder = new (TFolder as any)('People/John Doe');
+			const janeSmithFolder = new (TFolder as any)('People/Jane Smith');
 			johnDoeFolder.children = [];
 			janeSmithFolder.children = [];
 			peopleFolder.children = [johnDoeFolder, janeSmithFolder];

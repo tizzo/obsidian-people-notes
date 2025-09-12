@@ -39,7 +39,7 @@ export class TFile {
 	extension: string;
 	stat: { ctime: number; mtime: number; size: number };
 
-	constructor(path: string) {
+	constructor(path: string = 'mock-file.md') {
 		this.path = path;
 		this.name = path.split('/').pop() || '';
 		this.basename = this.name.split('.')[0] || '';
@@ -57,7 +57,7 @@ export class TFolder {
 	path: string;
 	children: (TFile | TFolder)[];
 
-	constructor(path: string) {
+	constructor(path: string = 'mock-folder') {
 		this.path = path;
 		this.name = path.split('/').pop() || '';
 		this.children = [];

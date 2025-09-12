@@ -119,7 +119,7 @@ export class DirectoryManagerImpl implements DirectoryManager {
 		}
 		
 		const timestampStr = match[1];
-		if (!timestampStr) {
+		if (timestampStr == null || timestampStr === '') {
 			return {
 				personName,
 				fileName: file.name,

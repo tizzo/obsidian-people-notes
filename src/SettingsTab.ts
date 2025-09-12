@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import { PeopleNotesSettings, EmbeddingFormat, TimestampFormat } from './types';
+import { EmbeddingFormat, TimestampFormat } from './types';
 import PeopleNotesPlugin from './main';
 
 export class PeopleNotesSettingTab extends PluginSettingTab {

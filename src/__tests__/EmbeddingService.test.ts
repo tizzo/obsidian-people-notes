@@ -23,7 +23,7 @@ describe('EmbeddingService', () => {
 		// Default mock implementations
 		mockVault.read.mockResolvedValue('');
 		mockVault.modify.mockResolvedValue();
-		mockVault.create.mockResolvedValue(new TFile('test.md'));
+		mockVault.create.mockResolvedValue(new (TFile as any)('test.md'));
 
 		embeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, DEFAULT_SETTINGS);
 		
@@ -77,7 +77,7 @@ describe('EmbeddingService', () => {
 	describe('embedInCurrentNote', () => {
 		it('should embed note in current active note successfully', async () => {
 			// Mock an active note
-			const activeFile = new TFile('current-note.md');
+			const activeFile = new (TFile as any)('current-note.md');
 			mockWorkspace.getActiveFile.mockReturnValue(activeFile);
 			mockVault.read.mockResolvedValue('Existing content');
 
@@ -100,7 +100,7 @@ describe('EmbeddingService', () => {
 
 		it('should append note link to end of current note', async () => {
 			// Mock an active note with existing content
-			const activeFile = new TFile('current-note.md');
+			const activeFile = new (TFile as any)('current-note.md');
 			mockWorkspace.getActiveFile.mockReturnValue(activeFile);
 			mockVault.read.mockResolvedValue('Original content here');
 
@@ -121,7 +121,7 @@ describe('EmbeddingService', () => {
 
 		it('should use configured embedding format', async () => {
 			// Mock an active note
-			const activeFile = new TFile('current-note.md');
+			const activeFile = new (TFile as any)('current-note.md');
 			mockWorkspace.getActiveFile.mockReturnValue(activeFile);
 			mockVault.read.mockResolvedValue('Content');
 

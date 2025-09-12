@@ -11,7 +11,7 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 	async embedInCurrentNote(note: NoteInfo): Promise<boolean> {
 		try {
 			const activeFile = this.workspace.getActiveFile();
-			if (!activeFile) {
+			if (activeFile == null) {
 				return false;
 			}
 
@@ -35,7 +35,7 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 			let tocContent = '';
 
 			// Create TOC file if it doesn't exist
-			if (!tocFile) {
+			if (tocFile == null) {
 				tocContent = this.createInitialTocContent();
 				tocFile = await this.vault.create(tocPath, tocContent);
 			} else {
@@ -62,15 +62,18 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 		const baseName = note.fileName.replace(/\.md$/, '');
 
 		switch (format) {
-			case 'wikilink':
+			case 'wikilink': {
 				return `[[${baseName}]]`;
+			}
 			
-			case 'markdown-link':
+			case 'markdown-link': {
 				const encodedPath = note.filePath.replace(/ /g, '%20');
 				return `[${baseName}](${encodedPath})`;
+			}
 			
-			default:
+			default: {
 				return `[[${baseName}]]`;
+			}
 		}
 	}
 
@@ -114,11 +117,11 @@ This file automatically tracks all notes created for different people.
 				const line = lines[i]?.trim();
 				
 				// Stop at next person section or end of notes
-				if (line?.startsWith('##') || (!line?.startsWith('-') && line !== '')) {
+				if (line?.startsWith('##') === true || (line?.startsWith('-') !== true && line !== '')) {
 					break;
 				}
 				
-				if (line?.startsWith('-')) {
+				if (line?.startsWith('-') === true) {
 					// Compare timestamps if possible
 					if (this.shouldInsertBefore(noteEntry, line, note)) {
 						break;
@@ -136,7 +139,7 @@ This file automatically tracks all notes created for different people.
 			
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i]?.trim();
-				if (line?.startsWith('## ')) {
+				if (line?.startsWith('## ') === true) {
 					const existingPersonName = line.substring(3);
 					if (note.personName.localeCompare(existingPersonName) < 0) {
 						insertSectionIndex = i;
@@ -166,7 +169,7 @@ This file automatically tracks all notes created for different people.
 		
 		// Extract timestamp from note filename if possible
 		const timestampMatch = existingNoteEntry.match(/(\d{4}-\d{2}-\d{2}--\d{2}-\d{2}-\d{2})/);
-		if (timestampMatch && timestampMatch[1]) {
+		if (timestampMatch?.[1] != null && timestampMatch[1] !== '') {
 			const parts = timestampMatch[1].split('--');
 			if (parts.length === 2) {
 				const [datePart, timePart] = parts;

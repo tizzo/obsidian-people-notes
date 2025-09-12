@@ -3,7 +3,7 @@ module.exports = {
 	testEnvironment: 'jsdom',
 	roots: ['<rootDir>/src'],
 	testMatch: [
-		'**/__tests__/**/*.+(ts|tsx|js)',
+		'**/__tests__/**/*.test.+(ts|tsx|js)',
 		'**/*.(test|spec).+(ts|tsx|js)'
 	],
 	transform: {
@@ -19,5 +19,9 @@ module.exports = {
 	setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
 	moduleNameMapping: {
 		'^obsidian$': '<rootDir>/src/__tests__/__mocks__/obsidian'
-	}
+	},
+	testPathIgnorePatterns: [
+		'<rootDir>/src/__tests__/__mocks__/',
+		'<rootDir>/src/__tests__/setup.ts'
+	]
 };
