@@ -29,6 +29,7 @@ export interface PeopleNotesSettings {
 	tableOfContentsPath: string;
 	embeddingFormat: EmbeddingFormat;
 	timestampFormat: TimestampFormat;
+	noteEmbedType: NoteEmbedType;
 }
 
 /**
@@ -38,7 +39,8 @@ export const DEFAULT_SETTINGS: PeopleNotesSettings = {
 	peopleDirectoryPath: 'People',
 	tableOfContentsPath: 'People/Table of Contents.md',
 	embeddingFormat: 'wikilink',
-	timestampFormat: 'iso-with-seconds'
+	timestampFormat: 'iso-with-seconds',
+	noteEmbedType: 'link'
 } as const;
 
 /**
@@ -50,6 +52,11 @@ export type EmbeddingFormat = 'wikilink' | 'markdown-link';
  * Format options for timestamps in filenames
  */
 export type TimestampFormat = 'iso-with-seconds' | 'iso-without-seconds';
+
+/**
+ * Options for how notes are embedded in current document
+ */
+export type NoteEmbedType = 'link' | 'embed';
 
 /**
  * Result of a person search operation
@@ -163,5 +170,5 @@ export interface EmbeddingService {
 	/**
 	 * Formats a note link for embedding
 	 */
-	formatNoteLink(note: NoteInfo, format: EmbeddingFormat): string;
+	formatNoteLink(note: NoteInfo, format: EmbeddingFormat, embedType?: NoteEmbedType): string;
 }

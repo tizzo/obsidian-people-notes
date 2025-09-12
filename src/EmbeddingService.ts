@@ -1,5 +1,5 @@
 import { Vault, Workspace, TFile } from 'obsidian';
-import { EmbeddingService, NoteInfo, EmbeddingFormat, PeopleNotesSettings } from './types';
+import { EmbeddingService, NoteInfo, EmbeddingFormat, NoteEmbedType, PeopleNotesSettings } from './types';
 
 export class EmbeddingServiceImpl implements EmbeddingService {
 	constructor(
@@ -16,7 +16,7 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 			}
 
 			const currentContent = await this.vault.read(activeFile);
-			const noteLink = this.formatNoteLink(note, this.settings.embeddingFormat);
+			const noteLink = this.formatNoteLink(note, this.settings.embeddingFormat, this.settings.noteEmbedType);
 			const newContent = currentContent + '\n\n' + noteLink;
 
 			await this.vault.modify(activeFile, newContent);
@@ -58,21 +58,25 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 		}
 	}
 
-	formatNoteLink(note: NoteInfo, format: EmbeddingFormat): string {
+	formatNoteLink(note: NoteInfo, format: EmbeddingFormat, embedType: NoteEmbedType = 'link'): string {
 		const baseName = note.fileName.replace(/\.md$/, '');
+		
+		// Determine the prefix based on embed type (only applies to wikilinks)
+		const embedPrefix = (embedType === 'embed' && format === 'wikilink') ? '!' : '';
 
 		switch (format) {
 			case 'wikilink': {
-				return `[[${baseName}]]`;
+				return `${embedPrefix}[[${baseName}]]`;
 			}
 			
 			case 'markdown-link': {
+				// Markdown links don't support embedding with ! syntax, so embedType is ignored
 				const encodedPath = note.filePath.replace(/ /g, '%20');
 				return `[${baseName}](${encodedPath})`;
 			}
 			
 			default: {
-				return `[[${baseName}]]`;
+				return `${embedPrefix}[[${baseName}]]`;
 			}
 		}
 	}
@@ -90,7 +94,7 @@ This file automatically tracks all notes created for different people.
 	private updateTocWithNote(tocContent: string, note: NoteInfo): string {
 		const lines = tocContent.split('\n');
 		const personSectionHeader = `## ${note.personName}`;
-		const noteLink = this.formatNoteLink(note, this.settings.embeddingFormat);
+		const noteLink = this.formatNoteLink(note, this.settings.embeddingFormat, 'link'); // TOC always uses links, not embeds
 		const noteEntry = `- ${noteLink}`;
 
 		// Check if note already exists in TOC to avoid duplicates

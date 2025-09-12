@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import { EmbeddingFormat, TimestampFormat } from './types';
+import { EmbeddingFormat, TimestampFormat, NoteEmbedType } from './types';
 import PeopleNotesPlugin from './main';
 
 export class PeopleNotesSettingTab extends PluginSettingTab {
@@ -56,6 +56,19 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.embeddingFormat)
 				.onChange(async (value: string) => {
 					this.plugin.settings.embeddingFormat = value as EmbeddingFormat;
+					await this.plugin.saveSettings();
+				}));
+
+		// Note Embed Type Setting
+		new Setting(containerEl)
+			.setName('Note embedding style')
+			.setDesc('Choose whether to link to notes or embed them inline. Embedding shows note content directly in the current note.')
+			.addDropdown(dropdown => dropdown
+				.addOption('link', 'Link ([[Note Name]]) - References the note')
+				.addOption('embed', 'Embed (![[Note Name]]) - Shows note content inline')
+				.setValue(this.plugin.settings.noteEmbedType)
+				.onChange(async (value: string) => {
+					this.plugin.settings.noteEmbedType = value as NoteEmbedType;
 					await this.plugin.saveSettings();
 				}));
 
@@ -139,7 +152,8 @@ export class PeopleNotesSettingTab extends PluginSettingTab {
 						peopleDirectoryPath: 'People',
 						tableOfContentsPath: 'People/Table of Contents.md',
 						embeddingFormat: 'wikilink' as EmbeddingFormat,
-						timestampFormat: 'iso-with-seconds' as TimestampFormat
+						timestampFormat: 'iso-with-seconds' as TimestampFormat,
+						noteEmbedType: 'link' as NoteEmbedType
 					}};
 					await this.plugin.saveSettings();
 					this.display(); // Refresh the settings display

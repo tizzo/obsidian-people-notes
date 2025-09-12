@@ -203,4 +203,67 @@ describe('EmbeddingService', () => {
 			// Would verify only one entry exists for this note
 		});
 	});
+
+	describe('formatNoteLink with embed types', () => {
+		it('should create link format for wikilink by default', () => {
+			const link = embeddingService.formatNoteLink(mockNote, 'wikilink');
+			expect(link).toBe('[[John Doe 2025-09-11--10-18-48]]');
+		});
+
+		it('should create embed format for wikilink when specified', () => {
+			const link = embeddingService.formatNoteLink(mockNote, 'wikilink', 'embed');
+			expect(link).toBe('![[John Doe 2025-09-11--10-18-48]]');
+		});
+
+		it('should create link format for wikilink when explicitly specified', () => {
+			const link = embeddingService.formatNoteLink(mockNote, 'wikilink', 'link');
+			expect(link).toBe('[[John Doe 2025-09-11--10-18-48]]');
+		});
+
+		it('should ignore embed type for markdown links', () => {
+			const linkFormat = embeddingService.formatNoteLink(mockNote, 'markdown-link', 'link');
+			const embedFormat = embeddingService.formatNoteLink(mockNote, 'markdown-link', 'embed');
+			
+			expect(linkFormat).toBe('[John Doe 2025-09-11--10-18-48](People/John%20Doe/John%20Doe%202025-09-11--10-18-48.md)');
+			expect(embedFormat).toBe('[John Doe 2025-09-11--10-18-48](People/John%20Doe/John%20Doe%202025-09-11--10-18-48.md)');
+		});
+	});
+
+	describe('embedInCurrentNote with embed type setting', () => {
+		it('should embed note with link format when noteEmbedType is link', async () => {
+			const activeFile = new (TFile as any)('current-note.md');
+			mockWorkspace.getActiveFile.mockReturnValue(activeFile);
+			mockVault.read.mockResolvedValue('Existing content');
+			
+			// Create service with link embed type
+			const settingsWithLink = { ...DEFAULT_SETTINGS, noteEmbedType: 'link' as const };
+			const linkEmbeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, settingsWithLink);
+			
+			const result = await linkEmbeddingService.embedInCurrentNote(mockNote);
+			
+			expect(result).toBe(true);
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				activeFile,
+				'Existing content\n\n[[John Doe 2025-09-11--10-18-48]]'
+			);
+		});
+
+		it('should embed note with embed format when noteEmbedType is embed', async () => {
+			const activeFile = new (TFile as any)('current-note.md');
+			mockWorkspace.getActiveFile.mockReturnValue(activeFile);
+			mockVault.read.mockResolvedValue('Existing content');
+			
+			// Create service with embed type
+			const settingsWithEmbed = { ...DEFAULT_SETTINGS, noteEmbedType: 'embed' as const };
+			const embedEmbeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, settingsWithEmbed);
+			
+			const result = await embedEmbeddingService.embedInCurrentNote(mockNote);
+			
+			expect(result).toBe(true);
+			expect(mockVault.modify).toHaveBeenCalledWith(
+				activeFile,
+				'Existing content\n\n![[John Doe 2025-09-11--10-18-48]]'
+			);
+		});
+	});
 });
