@@ -33,14 +33,18 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 			// Construct path to person's TOC file
 			const personDirectory = note.filePath.substring(0, note.filePath.lastIndexOf('/'));
 			const tocPath = `${personDirectory}/${this.settings.tableOfContentsFileName}`;
+			console.log('TOC path:', tocPath);
+			
 			let tocFile = this.vault.getAbstractFileByPath(tocPath) as TFile;
 			let tocContent = '';
 
 			// Create TOC file if it doesn't exist
 			if (tocFile == null) {
+				console.log('Creating new TOC file');
 				tocContent = this.createInitialTocContent(note.personName);
 				tocFile = await this.vault.create(tocPath, tocContent);
 			} else {
+				console.log('Reading existing TOC file');
 				tocContent = await this.vault.read(tocFile);
 			}
 
@@ -49,13 +53,17 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 
 			// Only modify if content changed
 			if (updatedContent !== tocContent) {
+				console.log('TOC content changed, updating file');
 				await this.vault.modify(tocFile, updatedContent);
+			} else {
+				console.log('TOC content unchanged, skipping update');
 			}
 
 			return true;
 
 		} catch (error) {
 			console.error('Failed to update table of contents:', error);
+			console.error('Error details:', error);
 			return false;
 		}
 	}
@@ -94,45 +102,46 @@ This file tracks all notes for ${personName}, automatically updated when new not
 	}
 
 	private updatePersonTocWithNote(tocContent: string, note: NoteInfo): string {
-		const lines = tocContent.split('\n');
 		const noteLink = this.formatNoteLink(note, this.settings.embeddingFormat, 'link'); // TOC always uses links, not embeds
 		const noteEntry = `- ${noteLink}`;
 
 		// Check if note already exists in TOC to avoid duplicates
 		if (tocContent.includes(noteLink)) {
+			console.log('Note already exists in TOC, skipping');
 			return tocContent;
 		}
 
-		// Find where to insert the note (after the header and divider)
-		let insertIndex = lines.length;
+		console.log('Adding note to TOC:', noteEntry);
+		console.log('Original TOC content:', tocContent);
+
+		const lines = tocContent.split('\n');
+		let insertIndex = -1;
 		
-		// Look for the end of the header section (after "---")
+		// Find the line after "---" to insert the note
 		for (let i = 0; i < lines.length; i++) {
 			if (lines[i]?.trim() === '---') {
-				insertIndex = i + 2; // Insert after the divider and empty line
-				break;
-			}
-		}
-
-		// Find where to insert (maintain chronological order - newest first)
-		for (let i = insertIndex; i < lines.length; i++) {
-			const line = lines[i]?.trim();
-			
-			if (line?.startsWith('-') === true) {
-				// Compare timestamps if possible
-				if (this.shouldInsertBefore(noteEntry, line, note)) {
-					insertIndex = i;
-					break;
-				}
+				// Insert after the divider line
 				insertIndex = i + 1;
-			} else if (line !== '') {
-				// Stop at any non-empty, non-list line
+				
+				// Skip any empty lines after the divider
+				while (insertIndex < lines.length && lines[insertIndex]?.trim() === '') {
+					insertIndex++;
+				}
 				break;
 			}
 		}
 
+		// If we couldn't find the divider, append at the end
+		if (insertIndex === -1) {
+			insertIndex = lines.length;
+		}
+
+		// Insert the new note at the beginning of the list (newest first)
 		lines.splice(insertIndex, 0, noteEntry);
-		return lines.join('\n');
+		const result = lines.join('\n');
+		
+		console.log('Updated TOC content:', result);
+		return result;
 	}
 
 	private shouldInsertBefore(newNoteEntry: string, existingNoteEntry: string, newNote: NoteInfo): boolean {
