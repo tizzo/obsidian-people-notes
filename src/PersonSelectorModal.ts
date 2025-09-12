@@ -38,19 +38,36 @@ export class PersonSelectorModal extends FuzzySuggestModal<PersonSearchResult> {
 		
 		this.lastQuery = query;
 		
-		// Use synchronous search by converting async to sync with a cached approach
-		// This is a simplified implementation - in a real scenario, you might want to 
-		// implement debouncing and async loading states
-		this.fuzzySearchService.searchPeople(query).then(results => {
-			this.cachedResults = [...results];
-			// Note: updateSuggestions() is not available on the base class
-			// The modal will automatically refresh when getItems() is called again
-		}).catch(error => {
-			console.error('Error searching for people:', error);
-			this.cachedResults = [];
-		});
+		// Provide immediate "new person" option while async search loads
+		const trimmedQuery = query.trim();
+		if (trimmedQuery.length > 0) {
+			this.cachedResults = [{
+				person: {
+					name: trimmedQuery,
+					normalizedName: trimmedQuery.replace(/[/\\:*?"<>|]/g, '-').trim(),
+					directoryPath: `People/${trimmedQuery.replace(/[/\\:*?"<>|]/g, '-').trim()}`,
+					notes: []
+				},
+				isNewPerson: true,
+				matchScore: 0.5
+			}];
+		}
+		
+		// Start async search to get real results
+		this.performAsyncSearch(query);
 		
 		return this.cachedResults;
+	}
+
+	private async performAsyncSearch(query: string): Promise<void> {
+		try {
+			const results = await this.fuzzySearchService.searchPeople(query);
+			this.cachedResults = [...results];
+			// The modal will refresh automatically when getItems() is called again
+		} catch (error) {
+			console.error('Error searching for people:', error);
+			this.cachedResults = [];
+		}
 	}
 
 	private cachedResults: PersonSearchResult[] = [];
@@ -130,20 +147,8 @@ export class PersonSelectorModal extends FuzzySuggestModal<PersonSearchResult> {
 	}
 
 	override onNoSuggestion(): void {
-		// Show a helpful message when no suggestions are found
-		const query = this.inputEl.value.trim();
-		
-		if (query.length > 0) {
-			// Automatically create option for new person
-			const newPersonInfo: PersonInfo = {
-				name: query,
-				normalizedName: query.replace(/[/\\:*?"<>|]/g, '-').trim(),
-				directoryPath: `People/${query.replace(/[/\\:*?"<>|]/g, '-').trim()}`,
-				notes: []
-			};
-			
-			this.onSelectCallback(newPersonInfo, true);
-		}
+		// This should rarely be called since we provide immediate "new person" suggestions
+		// If it is called, don't automatically create anything - let the user decide
 	}
 
 	override open(): void {
