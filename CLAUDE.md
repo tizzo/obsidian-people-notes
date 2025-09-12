@@ -170,16 +170,34 @@ The plugin supports these settings (see `src/types.ts` for full interface):
 - Limit search results to prevent UI overload (max 10)
 - Use efficient algorithms for timestamp parsing and matching
 
-## Commit Message Style
+## Development Workflow Requirements
 
-Follow this format for consistency:
-```
-<type>: <description>
+### Pre-Commit Checklist
+**MANDATORY**: Always run these commands before any commit:
 
-- <detailed change 1>
-- <detailed change 2>
-- <detailed change 3>
-```
+1. **Lint Check**: `npm run lint` - Must pass with no errors
+2. **Test Suite**: `npm test` - All 55+ tests must pass
+3. **Build Verification**: `npm run build` - Must compile without errors
+
+If any of these fail, fix the issues before committing. This ensures code quality and prevents broken builds.
+
+### Git Commit Rules
+
+**CRITICAL**: Follow these rules for all commits:
+
+1. **Author Identity**: User must be both author and committer (no Claude attribution)
+2. **Commit Messages**: Never include Claude-generated text such as:
+   - "🤖 Generated with [Claude Code]"
+   - "Co-Authored-By: Claude <noreply@anthropic.com>"
+   - Any other Claude attribution or co-authoring
+3. **Message Format**: Use clear, professional commit messages:
+   ```
+   <type>: <description>
+   
+   - <detailed change 1>
+   - <detailed change 2>
+   - <detailed change 3>
+   ```
 
 Types: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `chore`
 
