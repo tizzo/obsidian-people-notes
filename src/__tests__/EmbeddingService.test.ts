@@ -286,19 +286,13 @@ describe('EmbeddingService', () => {
 			expect(result).toBe(true);
 			expect(mockVault.create).toHaveBeenCalledWith(
 				'People/John Doe/John Doe Meeting Notes.md',
-				expect.stringContaining('# John Doe Meeting Notes')
+				'- [[John Doe 2025-09-11--10-18-48]]'
 			);
 		});
 
 		it('should update existing per-person TOC file', async () => {
 			const existingTocFile = new (TFile as any)('People/John Doe/John Doe Meeting Notes.md');
-			const existingContent = `# Notes for John Doe
-
-This file tracks all notes for John Doe, automatically updated when new notes are created.
-
----
-
-- [[Old Note]]`;
+			const existingContent = `- [[Old Note]]`;
 
 			mockVault.getAbstractFileByPath.mockReturnValue(existingTocFile);
 			mockVault.read.mockResolvedValue(existingContent);
@@ -308,13 +302,13 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			expect(result).toBe(true);
 			expect(mockVault.modify).toHaveBeenCalledWith(
 				existingTocFile,
-				expect.stringContaining('[[John Doe 2025-09-11--10-18-48]]')
+				'- [[John Doe 2025-09-11--10-18-48]]\n- [[Old Note]]'
 			);
 		});
 	});
 
-	describe('Meeting Notes title format', () => {
-		it('should create TOC with Meeting Notes title format', async () => {
+	describe('Headerless TOC format', () => {
+		it('should create TOC without headers', async () => {
 			mockVault.getAbstractFileByPath.mockReturnValue(null); // TOC doesn't exist
 			mockVault.create.mockResolvedValue(new (TFile as any)('toc.md'));
 
@@ -323,7 +317,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			expect(result).toBe(true);
 			expect(mockVault.create).toHaveBeenCalledWith(
 				'People/John Doe/John Doe Meeting Notes.md',
-				expect.stringContaining('# John Doe Meeting Notes')
+				'- [[John Doe 2025-09-11--10-18-48]]'
 			);
 		});
 	});
@@ -334,13 +328,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			const linkEmbeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, linkSettings, mockDirectoryManager);
 			
 			const existingTocFile = new (TFile as any)('People/John Doe/John Doe Meeting Notes.md');
-			const existingContent = `# John Doe Meeting Notes
-
-This file tracks all notes for John Doe, automatically updated when new notes are created.
-
----
-
-`;
+			const existingContent = ``;
 
 			mockVault.getAbstractFileByPath.mockReturnValue(existingTocFile);
 			mockVault.read.mockResolvedValue(existingContent);
@@ -350,11 +338,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			expect(result).toBe(true);
 			expect(mockVault.modify).toHaveBeenCalledWith(
 				existingTocFile,
-				expect.stringContaining('- [[John Doe 2025-09-11--10-18-48]]')
-			);
-			expect(mockVault.modify).not.toHaveBeenCalledWith(
-				existingTocFile,
-				expect.stringContaining('- ![[John Doe 2025-09-11--10-18-48]]')
+				'- [[John Doe 2025-09-11--10-18-48]]'
 			);
 		});
 
@@ -363,13 +347,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			const embedEmbeddingService = new EmbeddingServiceImpl(mockVault, mockWorkspace, embedSettings, mockDirectoryManager);
 			
 			const existingTocFile = new (TFile as any)('People/John Doe/John Doe Meeting Notes.md');
-			const existingContent = `# John Doe Meeting Notes
-
-This file tracks all notes for John Doe, automatically updated when new notes are created.
-
----
-
-`;
+			const existingContent = ``;
 
 			mockVault.getAbstractFileByPath.mockReturnValue(existingTocFile);
 			mockVault.read.mockResolvedValue(existingContent);
@@ -379,7 +357,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			expect(result).toBe(true);
 			expect(mockVault.modify).toHaveBeenCalledWith(
 				existingTocFile,
-				expect.stringContaining('- ![[John Doe 2025-09-11--10-18-48]]')
+				'- ![[John Doe 2025-09-11--10-18-48]]'
 			);
 		});
 	});
@@ -416,7 +394,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			expect(mockDirectoryManager.getPersonInfo).toHaveBeenCalledWith('John Doe');
 			expect(mockVault.modify).toHaveBeenCalledWith(
 				existingTocFile,
-				expect.stringMatching(/# John Doe Meeting Notes[\s\S]*- \[\[John Doe 2025-09-12--14-30-15\]\][\s\S]*- \[\[John Doe 2025-09-11--10-18-48\]\]/)
+				'- [[John Doe 2025-09-12--14-30-15]]\n- [[John Doe 2025-09-11--10-18-48]]'
 			);
 		});
 
@@ -442,7 +420,7 @@ This file tracks all notes for John Doe, automatically updated when new notes ar
 			expect(result).toBe(true);
 			expect(mockVault.create).toHaveBeenCalledWith(
 				'People/Jane Smith/Jane Smith Meeting Notes.md',
-				expect.stringMatching(/# Jane Smith Meeting Notes[\s\S]*- \[\[Jane Smith 2025-09-11--16-45-22\]\]/)
+				'- [[Jane Smith 2025-09-11--16-45-22]]'
 			);
 		});
 

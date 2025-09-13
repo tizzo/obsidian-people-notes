@@ -42,17 +42,17 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 			// Create TOC file if it doesn't exist
 			if (tocFile == null) {
 				tocContent = this.createInitialTocContent(note.personName);
-				tocFile = await this.vault.create(tocPath, tocContent);
+				const updatedContent = this.updatePersonTocWithNote(tocContent, note);
+				tocFile = await this.vault.create(tocPath, updatedContent);
 			} else {
 				tocContent = await this.vault.read(tocFile);
-			}
+				// Add the note to the TOC
+				const updatedContent = this.updatePersonTocWithNote(tocContent, note);
 
-			// Add the note to the TOC
-			const updatedContent = this.updatePersonTocWithNote(tocContent, note);
-
-			// Only modify if content changed
-			if (updatedContent !== tocContent) {
-				await this.vault.modify(tocFile, updatedContent);
+				// Only modify if content changed
+				if (updatedContent !== tocContent) {
+					await this.vault.modify(tocFile, updatedContent);
+				}
 			}
 
 			return true;
@@ -87,13 +87,7 @@ export class EmbeddingServiceImpl implements EmbeddingService {
 	}
 
 	private createInitialTocContent(personName: string): string {
-		return `# ${personName} Meeting Notes
-
-This file tracks all notes for ${personName}, automatically updated when new notes are created.
-
----
-
-`;
+		return '';
 	}
 
 	private updatePersonTocWithNote(tocContent: string, note: NoteInfo): string {
@@ -105,31 +99,13 @@ This file tracks all notes for ${personName}, automatically updated when new not
 			return tocContent;
 		}
 
-		const lines = tocContent.split('\n');
-		let insertIndex = -1;
-		
-		// Find the line after "---" to insert the note
-		for (let i = 0; i < lines.length; i++) {
-			if (lines[i]?.trim() === '---') {
-				// Insert after the divider line
-				insertIndex = i + 1;
-				
-				// Skip any empty lines after the divider
-				while (insertIndex < lines.length && lines[insertIndex]?.trim() === '') {
-					insertIndex++;
-				}
-				break;
-			}
+		// If TOC is empty, just add the note
+		if (tocContent.trim() === '') {
+			return noteEntry;
 		}
 
-		// If we couldn't find the divider, append at the end
-		if (insertIndex === -1) {
-			insertIndex = lines.length;
-		}
-
-		// Insert the new note at the beginning of the list (newest first)
-		lines.splice(insertIndex, 0, noteEntry);
-		return lines.join('\n');
+		// Add new note at the beginning (newest first)
+		return noteEntry + '\n' + tocContent;
 	}
 
 	private generateTocFileName(personName: string): string {
