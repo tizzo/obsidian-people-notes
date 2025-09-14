@@ -11,10 +11,14 @@ This file contains context and instructions for Claude when working on the Peopl
 - Automatic timestamping: `{Name} YYYY-MM-DD--HH-mm-ss.md`
 - Fuzzy search person selector with autocomplete that finds existing people or creates new ones
 - Configurable embedding: Choose between linking (`[[note]]`) or embedding (`![[note]]`) in current notes
-- Per-person table of contents: Each person gets their own automatically-maintained TOC file
+- **Clean Per-Person TOCs**: Each person gets their own automatically-maintained TOC file with matching filename format (`{Name} Meeting Notes.md`)
+- **Headerless TOC Format**: TOC files contain only clean note lists without headers or metadata
+- **TOC Regeneration Command**: Rebuild entire TOC files for selected persons via command palette
+- **Smart TOC Self-Exclusion**: TOC files never include themselves in their own contents
+- **Configurable TOC Content**: Choose between links `[[note]]` or embeds `![[note]]` in table of contents
 - Clean note templates: Minimal structure with cursor positioned at end for immediate writing
 - Comprehensive settings: Customizable directory paths, embedding formats, timestamp precision
-- Full TypeScript with strict typing and comprehensive test coverage (64 tests)
+- Full TypeScript with strict typing and comprehensive test coverage (73 tests)
 
 ## Architecture
 
@@ -87,7 +91,7 @@ Each service has comprehensive unit tests with mocked dependencies:
 - **DirectoryManager**: 13 tests covering file operations, name normalization, person info retrieval
 - **PeopleNotesService**: 11 tests covering note creation, timestamp formatting, integration
 - **FuzzySearchService**: 14 tests covering search algorithms, scoring, result ranking
-- **EmbeddingService**: 26 tests covering note embedding, per-person TOC management, configurable link/embed formats
+- **EmbeddingService**: 29 tests covering note embedding, per-person TOC management, configurable link/embed formats, TOC regeneration
 
 ### Mock Strategy
 - Obsidian API is comprehensively mocked in `__tests__/__mocks__/obsidian.ts`
@@ -130,11 +134,11 @@ Each service has comprehensive unit tests with mocked dependencies:
 vault/
 ├── People/
 │   ├── John Doe/
-│   │   ├── Table of Contents.md
+│   │   ├── John Doe Meeting Notes.md
 │   │   ├── John Doe 2025-09-11--10-18-48.md
 │   │   └── John Doe 2025-09-12--14-30-15.md
 │   └── Jane Smith/
-│       ├── Table of Contents.md
+│       ├── Jane Smith Meeting Notes.md
 │       └── Jane Smith 2025-09-11--16-45-22.md
 ```
 
@@ -142,9 +146,10 @@ vault/
 
 The plugin supports these settings (see `src/types.ts` for full interface):
 - **peopleDirectoryPath**: Base directory for people notes (default: "People")
-- **tableOfContentsFileName**: Per-person TOC filename (default: "Table of Contents.md")
+- **tableOfContentsFileName**: TOC filename template with `{name}` placeholder (default: "{name} Meeting Notes.md")
 - **embeddingFormat**: Link format - "wikilink" or "markdown-link"
 - **noteEmbedType**: Embedding style - "link" or "embed" for `[[note]]` vs `![[note]]`
+- **tocContentType**: TOC content format - "link" or "embed" for entries in table of contents
 - **timestampFormat**: Timestamp precision - "iso-with-seconds" or "iso-without-seconds"
 
 ## Best Practices for Future Development
@@ -181,7 +186,7 @@ The plugin supports these settings (see `src/types.ts` for full interface):
 **MANDATORY**: Always run these commands before any commit:
 
 1. **Lint Check**: `npm run lint` - Must pass with no errors
-2. **Test Suite**: `npm test` - All 64 tests must pass
+2. **Test Suite**: `npm test` - All 73 tests must pass
 3. **Build Verification**: `npm run build` - Must compile without errors
 
 If any of these fail, fix the issues before committing. This ensures code quality and prevents broken builds.
@@ -208,7 +213,7 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `chore`
 
 ## Current Status
 
-✅ **Completed**: Full plugin implementation with 64 passing tests, 90%+ coverage on core services
+✅ **Completed**: Full plugin implementation with 73 passing tests, 90%+ coverage on core services
 ✅ **Tested**: All major workflows and edge cases covered
 ✅ **Ready**: Plugin builds successfully and ready for local testing
 

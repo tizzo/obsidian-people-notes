@@ -8,10 +8,10 @@ An Obsidian plugin for creating timestamped notes for people in organized direct
 - **Automatic Timestamping**: Notes are automatically named with timestamps (`${Name} YYYY-MM-DD--HH-mm-ss.md`)
 - **Fuzzy Search**: Smart person selection with autocomplete that finds existing people or creates new ones
 - **Flexible Embedding**: Choose between linking (`[[note]]`) or embedding (`![[note]]`) in current notes
-- **Per-Person TOCs**: Each person gets their own automatically-maintained table of contents
+- **Clean Per-Person TOCs**: Each person gets their own automatically-maintained table of contents with configurable link/embed format
 - **Clean Templates**: Notes start ready for writing with minimal structure and cursor positioned at the end
 - **Configurable Settings**: Customize directory paths, embedding formats, and timestamp precision
-- **Full TypeScript**: Strict typing throughout with comprehensive test coverage (64+ tests)
+- **Full TypeScript**: Strict typing throughout with comprehensive test coverage (73 tests)
 
 ## Development
 
@@ -53,6 +53,12 @@ For hot reload during development, install the Hot Reload plugin in your test va
 3. **Select or create**: Choose an existing person or create a new one
 4. **Start writing**: The note opens with cursor positioned at the end, ready for bullet points
 
+### Managing Table of Contents
+
+- **Automatic Updates**: TOC files are automatically updated when new notes are created
+- **Regenerate TOC**: Use "Regenerate Person TOC" command to rebuild a person's entire TOC
+- **Clean Format**: TOC files contain only note lists without headers - pure and minimal
+
 ### File Structure
 
 The plugin creates a clean, organized structure:
@@ -60,11 +66,11 @@ The plugin creates a clean, organized structure:
 ```
 People/
 ├── John Doe/
-│   ├── Table of Contents.md
+│   ├── John Doe Meeting Notes.md
 │   ├── John Doe 2025-09-11--10-18-48.md
 │   └── John Doe 2025-09-12--14-30-15.md
 └── Jane Smith/
-    ├── Table of Contents.md
+    ├── Jane Smith Meeting Notes.md
     └── Jane Smith 2025-09-11--16-45-22.md
 ```
 
@@ -73,9 +79,10 @@ People/
 Configure the plugin in Settings → People Notes:
 
 - **People directory path**: Where person directories are created (default: `People`)
-- **TOC filename**: Name for per-person table of contents files (default: `Table of Contents.md`)
+- **TOC filename template**: Template for TOC files using `{name}` placeholder (default: `{name} Meeting Notes.md`)
 - **Note link format**: Wikilink `[[name]]` or Markdown `[name](path)` format
 - **Note embedding style**: Link to notes `[[name]]` or embed them inline `![[name]]`
+- **TOC content format**: Choose between links `[[note]]` or embeds `![[note]]` in table of contents
 - **Timestamp format**: Include or exclude seconds in filenames
 
 ## Architecture
@@ -89,4 +96,4 @@ The plugin follows a modular service-oriented architecture:
 - **PersonSelectorModal**: UI for person selection with fuzzy search
 - **SettingsTab**: Configuration interface for all plugin options
 
-All services use dependency injection and are fully tested with 64+ comprehensive unit tests.
+All services use dependency injection and are fully tested with 73 comprehensive unit tests.
